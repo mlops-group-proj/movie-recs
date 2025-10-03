@@ -1,0 +1,1 @@
+# Pointers to Avro/JSON schemas for watch/rate/reco events

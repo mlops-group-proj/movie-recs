@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+prometheus-client
+pydantic
+pandas
+pyarrow
+confluent-kafka
+python-dotenv
+scikit-learn
+numpy
+pytest
