@@ -31,10 +31,10 @@ def main():
     finally:
         c.close()
         
-def consume_one_message():
+def consume_one_message(topic: str | None = None):
     """
-    Dummy consumer for CI testing.
-    If Kafka credentials are not set, returns a mocked message instead of connecting.
+    Consume one message (mock-safe for CI).
+    If no Kafka credentials are set, returns a mocked message.
     """
     conf = {
         'bootstrap.servers': os.environ.get('KAFKA_BOOTSTRAP'),
@@ -46,13 +46,13 @@ def consume_one_message():
         'auto.offset.reset': 'earliest',
     }
 
-    topic = os.environ.get('WATCH_TOPIC', 'myteam.watch')
+    topic = topic or os.environ.get('WATCH_TOPIC', 'myteam.watch')
 
-    # Mock mode (for CI)
-    if not conf['bootstrap.servers']:
+    if not conf.get('bootstrap.servers'):
         print(f"[mock-consume] returning dummy message from {topic}")
         return {"status": "mocked", "topic": topic, "message": {"user_id": 1, "movie_id": 50}}
 
+    from confluent_kafka import Consumer, KafkaException
     try:
         c = Consumer(conf)
         c.subscribe([topic])
