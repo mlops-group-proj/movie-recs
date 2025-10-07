@@ -25,7 +25,8 @@ def produce_test_message(topic: str | None = None):
     # Mock mode (for CI)
     if not conf.get('bootstrap.servers'):
         print(f"[mock-produce] {event} to {topic}")
-        return {"status": "Produced (mock)", "topic": topic, "event": event}
+        return f"Produced mock message to {topic}"
+        #return {"status": "Produced (mock)", "topic": topic, "event": event}
 
     try:
         p = Producer(conf)
