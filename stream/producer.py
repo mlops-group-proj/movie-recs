@@ -12,16 +12,16 @@ conf = {
 }
 
 
-def produce_test_message():
+def produce_test_message(topic: str | None = None):
     """
     Produce one test message to the WATCH_TOPIC (or a dummy message if Kafka is not configured).
-    This allows CI to import and call the function without needing a real cluster.
+    Allows optional topic override for test compatibility.
     """
-    topic = os.environ.get('WATCH_TOPIC', 'myteam.watch')
+    topic = topic or os.environ.get('WATCH_TOPIC', 'myteam.watch')
     event = {'ts': 1, 'user_id': 1, 'movie_id': 50, 'minute': 1}
 
-    # If no Kafka credentials are set (e.g., during CI), just print and return.
-    if not conf['bootstrap.servers']:
+    # Mock mode (for CI)
+    if not conf.get('bootstrap.servers'):
         print(f"[mock-produce] {event} to {topic}")
         return {"status": "mocked", "topic": topic, "event": event}
 
