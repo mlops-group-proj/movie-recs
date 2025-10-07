@@ -1,7 +1,7 @@
 # Optional: team-local event generator wrapper (implement if needed).
 import os, json
 
-from streamlit import event
+# from streamlit import event
 from confluent_kafka import Producer, KafkaException
 
 
