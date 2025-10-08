@@ -37,7 +37,7 @@ and iterate models.
 - `GET /metrics` → Prometheus exposition
 
 ## Project Structure
-See repo tree; update components as you progress through milestones.
+See repo tree; components updated as progress is made.
 
 ## Secrets & Safety
 - Use **GitHub Environments/Secrets**. Never commit secrets. Rotate if leaked.
