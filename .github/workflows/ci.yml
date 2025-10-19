@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [ main, feature/* ]
 
-# Needed so GITHUB_TOKEN can publish to GHCR
+# allow pushing images to GHCR with GITHUB_TOKEN
 permissions:
   contents: read
   packages: write
