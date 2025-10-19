@@ -6,12 +6,17 @@ on:
   pull_request:
     branches: [ main, feature/* ]
 
+# Needed so GITHUB_TOKEN can publish to GHCR
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build-test:
     runs-on: ubuntu-latest
     env:
       REGISTRY: ghcr.io
-      IMAGE_PATH: ${{ toLower(github.repository) }}
+      IMAGE_REPO: ${{ toLower(github.repository) }}   # owner/repo in lowercase
       IMAGE_TAG: ${{ github.sha }}
 
     steps:
@@ -21,7 +26,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: "3.9"
 
       - name: Install dependencies
         run: |
@@ -31,8 +36,26 @@ jobs:
       - name: Run tests
         run: pytest --maxfail=1 --disable-warnings -q
 
-      - name: Build Docker
-        run: docker build -f docker/recommender.Dockerfile -t $REGISTRY/$IMAGE_PATH/reco:$IMAGE_TAG .
+      # ---- Docker build & push (robust way) ----
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
-      - name: Push Docker image
-        run: docker push $REGISTRY/$IMAGE_PATH/reco:$IMAGE_TAG
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/recommender.Dockerfile
+          push: true
+          tags: ghcr.io/${{ env.IMAGE_REPO }}/reco:${{ env.IMAGE_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
