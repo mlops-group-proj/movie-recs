@@ -2,8 +2,11 @@
 # Robust Kafka consumer with CI-safe mock fallback
 
 from __future__ import annotations
+import json
 import os
-from typing import Optional
+from typing import Optional, Dict, Any
+
+from recommender.schemas import validate_message
 
 
 def _kafka_conf() -> dict:
@@ -56,8 +59,15 @@ def consume_one_message(topic: Optional[str] = None, timeout_sec: float = 2.0) -
                 raise KafkaException(msg.error())
 
             payload = msg.value().decode("utf-8")
-            print(f"[consume] {payload} <- {topic}")
-            return payload
+            # Extract topic type and validate message
+            topic_type = topic.split(".")[-1]  # e.g., "myteam.watch" -> "watch"
+            try:
+                validated_data = validate_message(payload, topic_type)
+                print(f"[consume] Valid message received: {json.dumps(validated_data)} <- {topic}")
+                return payload
+            except ValueError as e:
+                print(f"[consume] Invalid message format: {e}")
+                return payload  # Return original payload for backward compatibility
 
         finally:
             c.close()

@@ -9,7 +9,6 @@
    ```
 2. **Environment**
    - Copy `.env.example` → `.env` and set values.
-   - Copy `infra/kafka.env.example` → `infra/kafka.env` and set Kafka credentials.
 3. **Run API locally**
    ```bash
    uvicorn service.app:app --reload --port 8080
@@ -23,7 +22,16 @@
 5. **Kafka sanity (kcat)**
    ```bash
    # example (adjust flags for your cluster)
-   kcat -b $BOOTSTRAP -X security.protocol=SASL_SSL -X sasl.mechanisms=PLAIN         -X sasl.username=$API_KEY -X sasl.password=$API_SECRET         -t $TEAM.watch -C -o -5 -q
+   set -a && source .env && set +a && docker run --rm \
+   -e KAFKA_BOOTSTRAP \
+   -e KAFKA_API_KEY \
+   -e KAFKA_API_SECRET \
+   edenhill/kcat:1.7.0 -L \
+   -b "$KAFKA_BOOTSTRAP" \
+   -X security.protocol=SASL_SSL \
+   -X sasl.mechanisms=PLAIN \
+   -X sasl.username="$KAFKA_API_KEY" \
+   -X sasl.password="$KAFKA_API_SECRET"
    ```
 6. **CI/CD** (GitHub Actions)
    - Push to main → CI runs tests, builds/pushes image, CD deploys to cloud.
@@ -37,6 +45,61 @@
 ## Project Structure
 
 See repo tree; components updated as progress is made.
+
+## Kafka Configuration
+
+### Consumer Configuration
+The project uses Confluent Kafka with SASL_SSL authentication. The consumer configuration includes:
+
+```python
+{
+    "bootstrap.servers": "pkc-xxxxx.us-east-2.aws.confluent.cloud:9092",
+    "security.protocol": "SASL_SSL",
+    "sasl.mechanisms": "PLAIN",
+    "sasl.username": "your-api-key",
+    "sasl.password": "your-api-secret",
+    "group.id": "ingestor",
+    "auto.offset.reset": "earliest"
+}
+```
+
+### Schema Validation
+All Kafka messages are validated against Avro schemas:
+- **WatchEvent**: `{user_id: int, movie_id: int, timestamp: string}`
+- **RateEvent**: `{user_id: int, movie_id: int, rating: float, timestamp: string}`
+- **RecoRequest**: `{user_id: int, timestamp: string}`
+- **RecoResponse**: `{user_id: int, movie_ids: [int], scores: [float], timestamp: string}`
+
+### Stream Ingestor
+The stream ingestor (`stream/ingestor.py`) consumes from all topics, validates messages, and writes to parquet:
+```bash
+# Run the ingestor
+python -m stream.ingestor
+
+# Or with Docker
+docker build -f docker/ingestor.Dockerfile -t movie-ingestor:latest .
+docker run --env-file .env movie-ingestor:latest
+```
+
+**Output Structure:**
+```
+data/snapshots/
+  ├── watch/2025-10-20/batch_20251020_120000.parquet
+  ├── rate/2025-10-20/batch_20251020_120000.parquet
+  ├── reco_requests/2025-10-20/batch_20251020_120000.parquet
+  └── reco_responses/2025-10-20/batch_20251020_120000.parquet
+```
+
+### Testing
+```bash
+# Run all tests
+pytest tests/ -v
+
+# Run specific test suites
+pytest tests/test_schemas.py -v      # Schema validation tests
+pytest tests/test_consumer.py -v     # Consumer integration tests
+pytest tests/test_ingestor.py -v     # Ingestor tests (17 tests)
+```
 
 ## Secrets & Safety
 

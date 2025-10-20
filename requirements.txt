@@ -9,3 +9,5 @@ python-dotenv
 scikit-learn
 numpy
 pytest
+avro-python3
+fastavro
