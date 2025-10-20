@@ -1,14 +1,26 @@
 name: Probes
 on:
   schedule:
-    - cron: '*/30 * * * *'  # every 30 minutes
+    - cron: "0 * * * *"  # every hour
+  workflow_dispatch:
+
 jobs:
   probe:
     runs-on: ubuntu-latest
+    env:
+      RECO_API: ${{ secrets.RECO_API }}
+      KAFKA_BOOTSTRAP: ${{ secrets.KAFKA_BOOTSTRAP }}
+      KAFKA_API_KEY: ${{ secrets.KAFKA_API_KEY }}
+      KAFKA_API_SECRET: ${{ secrets.KAFKA_API_SECRET }}
+      KAFKA_TEAM: ${{ secrets.KAFKA_TEAM }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - run: pip install -r requirements.txt
-      - run: python scripts/probe.py || true
+      - name: Install dependencies
+        run: pip install requests confluent-kafka
+      - name: Run probe
+        run: python scripts/probe.py
+      - name: Retry on transient errors
+        run: |
+          for i in 1 2 3; do
+            python scripts/probe.py && break || sleep 30
+          done
