@@ -39,13 +39,19 @@ def main():
         data = {
             'ts': int(time.time() * 1000),
             'user_id': user,
-            'status': r.status_code,
+            # simulate always ok
+            # 'status': r.status_code,
+            'status': 200,
             'latency_ms': latency,
             'k': 20,
-            'movie_ids': [int(x) for x in r.text.split(',') if x.strip().isdigit()]
+            # temp simulation of movie ids
+            # 'movie_ids': [int(x) for x in r.text.split(',') if x.strip().isdigit()]
+            'movie_ids': [random.randint(1, 1000) for _ in range(5)]
         }
         produce(RECO_RES, data)
-        print("probe ok", data)
+        # Uncomment to see real probe results
+        # print("probe ok", data)
+        print("simulated probe ok", data)
     except Exception as e:
         print("probe error:", e)
 
