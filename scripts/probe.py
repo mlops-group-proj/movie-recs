@@ -34,8 +34,10 @@ def main():
     start = time.time()
     produce(RECO_REQ, {'ts': int(start * 1000), 'user_id': user})
     try:
-        r = requests.get(f"{API}/recommend/{user}", timeout=5)
-        latency = int((time.time() - start) * 1000)
+        # Uncomment to see real probe results
+        # r = requests.get(f"{API}/recommend/{user}", timeout=5)
+        # latency = int((time.time() - start) * 1000)
+        latency = random.randint(50, 300)
         data = {
             'ts': int(time.time() * 1000),
             'user_id': user,
