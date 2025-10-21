@@ -1,0 +1,4 @@
+model,version,train_seconds,peak_mem_mb
+popularity,v0.1,0.0017615999968256801,
+itemcf,v0.1,0.0025246000004699454,
+als,v0.2,1.1736947000026703,
