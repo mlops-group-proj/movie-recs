@@ -134,3 +134,37 @@ Example output:
 # TYPE http_requests_total counter
 http_requests_total{method="GET",path="/metrics",status="200"} 1.0
 ```
+
+---
+
+## Cloud Deployment (AWS ECS Fargate)
+
+The containerized API is deployed using **AWS ECS (Fargate)** with an **Application Load Balancer (ALB)** for routing and health checks.  
+The Docker image is stored in **Amazon ECR**, and deployments are automated via **GitHub Actions**.
+
+### Deployed Resources
+
+| Resource            | Name                      | Description                                  |
+| ------------------- | ------------------------- | -------------------------------------------- |
+| **ECR Repository**  | `movie-recs`              | Stores Docker images (`linux/amd64`)         |
+| **ECS Cluster**     | `movie-recs-cluster-v2`   | Manages containerized tasks                  |
+| **Task Definition** | `movie-recs-task`         | Defines container configuration              |
+| **ECS Service**     | `movie-recs-task-service` | Runs and maintains desired task count        |
+| **Load Balancer**   | `movie-recs-alb`          | Routes external traffic to ECS service       |
+| **Target Group**    | `final-movie-rg`          | Performs health checks on running containers |
+
+---
+
+### Health Check Verification
+
+After deployment, the ALB URL was tested successfully:
+
+**Public Endpoint:**
+
+http://movie-recs-alb-782825466.us-east-2.elb.amazonaws.com/healthz
+
+**Response:**
+
+```json
+{ "status": "ok", "version": "v0.1" }
+```
