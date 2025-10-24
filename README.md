@@ -1,6 +1,7 @@
-# Cloud-Native Recommender 
+# Cloud-Native Recommender
 
 ## Quickstart
+
 1. **Python setup**
    ```bash
    python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
@@ -36,11 +37,13 @@
    - Push to main → CI runs tests, builds/pushes image, CD deploys to cloud.
 
 ## Endpoints
+
 - `GET /healthz` → `{ "status": "ok", "version": "vX.Y" }`
 - `GET /recommend/{user_id}?k=20&model=A` → comma-separated movie IDs
 - `GET /metrics` → Prometheus exposition
 
 ## Project Structure
+
 See repo tree; components updated as progress is made.
 
 ## Kafka Configuration
@@ -99,5 +102,35 @@ pytest tests/test_ingestor.py -v     # Ingestor tests (17 tests)
 ```
 
 ## Secrets & Safety
+
 - Use **GitHub Environments/Secrets**. Never commit secrets. Rotate if leaked.
 - Follow team contract’s Definition of Done. Lint and tests must pass before merge.
+
+---
+
+## Metrics and Monitoring
+
+The service exposes **Prometheus-compatible metrics** for observability.
+
+### Endpoint
+
+- **URL:** `http://<host>:8080/metrics`
+- **Method:** `GET`
+- **Content-Type:** `text/plain; version=0.0.4`
+
+### Key Metrics
+
+| Metric                          | Type      | Description                           |
+| ------------------------------- | --------- | ------------------------------------- |
+| `http_requests_total`           | Counter   | Total HTTP requests processed         |
+| `http_request_duration_seconds` | Histogram | Request latency in seconds            |
+| `recommend_requests_total`      | Counter   | Recommendation requests processed     |
+| `recommend_latency_seconds`     | Histogram | Latency for recommendation generation |
+
+Example output:
+
+```text
+# HELP http_requests_total Total HTTP requests
+# TYPE http_requests_total counter
+http_requests_total{method="GET",path="/metrics",status="200"} 1.0
+```
