@@ -1,26 +1,20 @@
-from fastapi import FastAPI, HTTPException
-from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from fastapi import FastAPI, HTTPException, Query
+from recommender.factory import get_recommender
+from prometheus_client import Counter, Histogram 
 import os
 
 app = FastAPI()
-reqs = Counter('recommend_requests_total','requests',['status'])
-lat = Histogram('recommend_latency_seconds','latency')
 
-@app.get('/healthz')
-def healthz():
-    return {"status":"ok","version":os.getenv('MODEL_VERSION','v0.1')}
-
-@app.get('/recommend/{user_id}')
-@lat.time()
-def recommend(user_id: int, k: int = 20, model: str | None = None):
+@app.get("/recommend/{user_id}")
+def recommend(
+    user_id: str,
+    k: int = Query(20, ge=1, le=100),
+    model: str = Query("popularity"),
+):
     try:
-        ids = [50, 172, 1][:k]  # TODO: replace with real inference
-        reqs.labels('200').inc()
-        return ','.join(map(str, ids))
-    except Exception as e:
-        reqs.labels('500').inc()
-        raise HTTPException(500, str(e))
+        reco = get_recommender(model)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-@app.get('/metrics')
-def metrics():
-    return generate_latest(), 200, {'Content-Type': CONTENT_TYPE_LATEST}
+    items = reco.recommend(user_id=user_id, k=k, seen_items=[])
+    return {"user_id": str(user_id), "model": model, "items": [str(x) for x in items]}

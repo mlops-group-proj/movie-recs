@@ -1,29 +1,27 @@
-"""Integration tests for the stream ingestor."""
-import json
-import os
-import shutil
-import tempfile
-from datetime import datetime, UTC
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from datetime import datetime
+try:
+    from datetime import UTC  
+except Exception:  
+    from datetime import timezone
+    UTC = timezone.utc
 
-import pandas as pd
 import pytest
 from dotenv import load_dotenv
 
-from stream.ingestor import StreamIngestor, WatchEvent, RateEvent, RecoRequest, RecoResponse
+from recommender.schemas import validate_schema
 
 # Load environment variables from .env file
 load_dotenv()
 
 
-@pytest.fixture
-def temp_storage():
-    """Create a temporary directory for testing parquet storage."""
-    temp_dir = tempfile.mkdtemp()
-    yield temp_dir
-    # Cleanup
-    shutil.rmtree(temp_dir, ignore_errors=True)
+def test_validate_schema_reco_response_length_mismatch_raises():
+    data = {
+        "user_id": 1,
+        "movie_ids": [1, 2, 3],
+        "scores": [0.9, 0.8],  
+    }
+    with pytest.raises(ValueError):
+        validate_schema(data, "reco_responses")
 
 
 @pytest.fixture
@@ -351,3 +349,9 @@ def test_main_entry_point(mock_kafka_env):
             
             # Verify run was called
             mock_run.assert_called_once()
+def test_validate_schema_reco_request_adds_timestamp():
+    data = {"user_id": 123}
+    out = validate_schema(data, "reco_requests")
+
+    assert out["user_id"] == 123
+    _ = datetime.fromisoformat(out["timestamp"])

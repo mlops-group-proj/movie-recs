@@ -1,0 +1,11 @@
+{
+  "type": "ALS",
+  "factors": 64,
+  "iterations": 10,
+  "regularization": 0.01,
+  "users": 942,
+  "items": 1443,
+  "k_eval": 10,
+  "hr": 0.013859275053304905,
+  "ndcg": 0.005844693746167784
+}
