@@ -9,8 +9,12 @@ from unittest.mock import Mock, patch, MagicMock
 
 import pandas as pd
 import pytest
+from dotenv import load_dotenv
 
 from stream.ingestor import StreamIngestor, WatchEvent, RateEvent, RecoRequest, RecoResponse
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 @pytest.fixture
@@ -24,14 +28,14 @@ def temp_storage():
 
 @pytest.fixture
 def mock_kafka_env():
-    """Mock Kafka environment variables."""
-    with patch.dict(os.environ, {
-        "KAFKA_BOOTSTRAP": "test-bootstrap:9092",
-        "KAFKA_API_KEY": "test-key",
-        "KAFKA_API_SECRET": "test-secret",
-        "KAFKA_TEAM": "testteam"
-    }):
-        yield
+    """Mock Kafka environment variables loaded from .env file."""
+    # Environment variables are already loaded from .env via load_dotenv()
+    # This fixture just ensures they're available during tests
+    required_vars = ["KAFKA_BOOTSTRAP", "KAFKA_API_KEY", "KAFKA_API_SECRET", "KAFKA_TEAM"]
+    missing = [var for var in required_vars if not os.environ.get(var)]
+    if missing:
+        pytest.skip(f"Missing required environment variables: {', '.join(missing)}")
+    yield
 
 
 class TestSchemaModels:
@@ -101,7 +105,8 @@ class TestStreamIngestor:
             ingestor = StreamIngestor(storage_path=temp_storage)
             
             payload = json.dumps({"user_id": 123, "movie_id": 456})
-            result = ingestor._validate_message("testteam.watch", payload)
+            topic = f"{os.environ['KAFKA_TEAM']}.watch"
+            result = ingestor._validate_message(topic, payload)
             
             assert result is not None
             assert result["user_id"] == 123
@@ -114,7 +119,8 @@ class TestStreamIngestor:
             ingestor = StreamIngestor(storage_path=temp_storage)
             
             payload = json.dumps({"user_id": 123, "movie_id": 456, "rating": 4.5})
-            result = ingestor._validate_message("testteam.rate", payload)
+            topic = f"{os.environ['KAFKA_TEAM']}.rate"
+            result = ingestor._validate_message(topic, payload)
             
             assert result is not None
             assert result["user_id"] == 123
@@ -127,13 +133,15 @@ class TestStreamIngestor:
         with patch('stream.ingestor.Consumer'):
             ingestor = StreamIngestor(storage_path=temp_storage)
             
+            topic = f"{os.environ['KAFKA_TEAM']}.watch"
+            
             # Invalid JSON
-            result = ingestor._validate_message("testteam.watch", "not valid json")
+            result = ingestor._validate_message(topic, "not valid json")
             assert result is None
             
             # Invalid schema (wrong type)
             payload = json.dumps({"user_id": "not_an_int", "movie_id": 456})
-            result = ingestor._validate_message("testteam.watch", payload)
+            result = ingestor._validate_message(topic, payload)
             assert result is None
     
     def test_write_batch_to_parquet(self, temp_storage, mock_kafka_env):
@@ -237,20 +245,21 @@ class TestStreamIngestor:
                 
                 # Verify configuration
                 call_args = MockConsumer.call_args[0][0]
-                assert call_args["bootstrap.servers"] == "test-bootstrap:9092"
+                assert call_args["bootstrap.servers"] == os.environ["KAFKA_BOOTSTRAP"]
                 assert call_args["security.protocol"] == "SASL_SSL"
                 assert call_args["sasl.mechanisms"] == "PLAIN"
-                assert call_args["sasl.username"] == "test-key"
-                assert call_args["sasl.password"] == "test-secret"
+                assert call_args["sasl.username"] == os.environ["KAFKA_API_KEY"]
+                assert call_args["sasl.password"] == os.environ["KAFKA_API_SECRET"]
                 assert call_args["group.id"] == "ingestor"
                 
                 # Verify subscribe was called with correct topics
                 ingestor.consumer.subscribe.assert_called_once()
                 subscribed_topics = ingestor.consumer.subscribe.call_args[0][0]
-                assert "testteam.watch" in subscribed_topics
-                assert "testteam.rate" in subscribed_topics
-                assert "testteam.reco_requests" in subscribed_topics
-                assert "testteam.reco_responses" in subscribed_topics
+                kafka_team = os.environ["KAFKA_TEAM"]
+                assert f"{kafka_team}.watch" in subscribed_topics
+                assert f"{kafka_team}.rate" in subscribed_topics
+                assert f"{kafka_team}.reco_requests" in subscribed_topics
+                assert f"{kafka_team}.reco_responses" in subscribed_topics
             finally:
                 shutil.rmtree(temp_dir, ignore_errors=True)
 
@@ -265,9 +274,10 @@ class TestIngestorIntegration:
             mock_consumer = MockConsumer.return_value
             
             # Create mock messages
+            topic = f"{os.environ['KAFKA_TEAM']}.watch"
             messages = [
                 self._create_mock_message(
-                    "testteam.watch",
+                    topic,
                     json.dumps({"user_id": i, "movie_id": i * 10})
                 )
                 for i in range(5)
