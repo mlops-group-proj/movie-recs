@@ -11,6 +11,14 @@ import pandas as pd
 import pytest
 from dotenv import load_dotenv
 
+import sys
+from pathlib import Path as _Path
+
+# Ensure project root is first on sys.path so local `stream` package is imported
+_project_root = str(_Path(__file__).resolve().parents[1])
+if _project_root not in sys.path:
+    sys.path.insert(0, _project_root)
+
 from stream.ingestor import StreamIngestor, WatchEvent, RateEvent, RecoRequest, RecoResponse
 
 # Load environment variables from .env file
