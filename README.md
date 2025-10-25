@@ -1,5 +1,7 @@
 # Cloud-Native Recommender
 
+[![Probes](https://github.com/mlops-group-proj/movie-recs/actions/workflows/probes.yml/badge.svg)](https://github.com/mlops-group-proj/movie-recs/actions/workflows/probes.yml)
+
 ## Quickstart
 
 1. **Python setup**
