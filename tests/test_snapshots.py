@@ -8,7 +8,8 @@ import json
 import os
 import shutil
 import tempfile
-from datetime import datetime, UTC
+from datetime import datetime, timezone
+UTC = timezone.utc
 from pathlib import Path
 from unittest.mock import Mock, patch
 

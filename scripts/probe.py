@@ -1,97 +1,116 @@
 import os, time, json, random, requests
 from confluent_kafka import Producer
 
+# ---------------------------------------------------------------------
+# Environment
+# ---------------------------------------------------------------------
 API = os.environ.get("RECO_API", "http://localhost:8080")
-BOOTSTRAP = os.environ["KAFKA_BOOTSTRAP"]
-API_KEY = os.environ["KAFKA_API_KEY"]
-API_SECRET = os.environ["KAFKA_API_SECRET"]
+BOOTSTRAP = os.environ.get("KAFKA_BOOTSTRAP", "")
+API_KEY = os.environ.get("KAFKA_API_KEY", "")
+API_SECRET = os.environ.get("KAFKA_API_SECRET", "")
 TEAM = os.environ.get("KAFKA_TEAM", "team")
+
 RECO_REQ = f"{TEAM}.reco_requests"
 RECO_RES = f"{TEAM}.reco_responses"
 
 conf = {
-    'bootstrap.servers': BOOTSTRAP,
-    'security.protocol': 'SASL_SSL',
-    'sasl.mechanisms': 'PLAIN',
-    'sasl.username': API_KEY,
-    'sasl.password': API_SECRET,
-    'client.id': 'probe'
+    "bootstrap.servers": BOOTSTRAP,
+    "security.protocol": "SASL_SSL",
+    "sasl.mechanisms": "PLAIN",
+    "sasl.username": API_KEY or "dummy",
+    "sasl.password": API_SECRET or "dummy",
+    "client.id": "probe",
 }
-p = Producer(conf)
 
-def produce(topic, value):
+# Lazily created producer (can be mocked in tests)
+def get_producer():
+    return Producer(conf)
+
+p = None  # initialized at runtime
+
+
+# ---------------------------------------------------------------------
+# Helper to produce a message
+# ---------------------------------------------------------------------
+def produce(topic: str, value: dict):
+    """Send a JSON-encoded message to Kafka (retries up to 3 times)."""
+    global p
+    if p is None:
+        p = get_producer()
     for _ in range(3):
         try:
-            p.produce(topic, json.dumps(value).encode('utf-8'))
+            p.produce(topic, json.dumps(value).encode("utf-8"))
             p.flush(3)
-            return
+            return True
         except BufferError:
             time.sleep(1)
     print("failed to send", topic)
+    return False
 
-def main():
+
+
+# ---------------------------------------------------------------------
+# Core probe logic
+# ---------------------------------------------------------------------
+def run_probe_once():
+    """Perform one probe iteration (used by main and tests)."""
     user = random.randint(1, 1000)
     start = time.time()
-    produce(RECO_REQ, {'ts': int(start * 1000), 'user_id': user})
+
+    # Record request event
+    produce(RECO_REQ, {"ts": int(start * 1000), "user_id": user})
+
     try:
-        # Uncomment to see real probe results
+        # --- Real probe (uncomment for production) ---
         # r = requests.get(f"{API}/recommend/{user}", timeout=5)
         # latency = int((time.time() - start) * 1000)
+        # status = r.status_code
+        # movie_ids = [int(x) for x in r.text.split(",") if x.strip().isdigit()]
+
+        # --- Simulated probe (used in tests) ---
         latency = random.randint(50, 300)
+        status = 200
+        movie_ids = [random.randint(1, 1000) for _ in range(5)]
+
         data = {
-            'ts': int(time.time() * 1000),
-            'user_id': user,
-            # simulate always ok
-            # 'status': r.status_code,
-            'status': 200,
-            'latency_ms': latency,
-            'k': 20,
-            # temp simulation of movie ids
-            # 'movie_ids': [int(x) for x in r.text.split(',') if x.strip().isdigit()]
-            'movie_ids': [random.randint(1, 1000) for _ in range(5)]
+            "ts": int(time.time() * 1000),
+            "user_id": user,
+            "status": status,
+            "latency_ms": latency,
+            "k": 20,
+            "movie_ids": movie_ids,
         }
+
         produce(RECO_RES, data)
-        # Uncomment to see real probe results
-        # print("probe ok", data)
         print("simulated probe ok", data)
+        return data
+
     except Exception as e:
         print("probe error:", e)
+        return None
+
+
+# ---------------------------------------------------------------------
+# CLI Entrypoints
+# ---------------------------------------------------------------------
+def main(loop: bool = True):
+    """Run probe once or repeatedly (used for cron)."""
+    if loop:
+        while True:
+            run_probe_once()
+            time.sleep(60)  # one minute between probes
+    else:
+        run_probe_once()
+
+
+def main_once():
+    """Run exactly one iteration (for tests)."""
+    return run_probe_once()
+
 
 if __name__ == "__main__":
     try:
-        main()
+        main(loop=True)
     except Exception as e:
         print("fatal error:", e)
         exit(1)
-
-
-# import json, random, requests, time, os
-
-# API = os.environ.get("RECO_API", "http://localhost:8080")
-# out_dir = "data/snapshots"
-# os.makedirs(out_dir, exist_ok=True)
-
-# def main():
-#     user = random.randint(1, 1000)
-#     start = time.time()
-#     req = {"ts": start, "user_id": user}
-#     try:
-#         r = requests.get(f"{API}/recommend/{user}", timeout=5)
-#         res = {
-#             "ts": time.time(),
-#             "user_id": user,
-#             "status": r.status_code,
-#             "latency_ms": int((time.time() - start)*1000),
-#             "movie_ids": [int(x) for x in r.text.split(",") if x.strip().isdigit()]
-#         }
-#     except Exception as e:
-#         res = {"ts": time.time(), "user_id": user, "error": str(e)}
-
-#     # simulate Kafka events
-#     with open(f"{out_dir}/reco_requests.jsonl", "a") as f:
-#         f.write(json.dumps(req) + "\n")
-#     with open(f"{out_dir}/reco_responses.jsonl", "a") as f:
-#         f.write(json.dumps(res) + "\n")
-
-# if __name__ == "__main__":
-#     main()
