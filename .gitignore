@@ -6,6 +6,7 @@ __pycache__/
 .env
 .env.*
 *.env
+!.env.example
 # Jupyter
 .ipynb_checkpoints/
 # OS
@@ -18,4 +19,5 @@ Thumbs.db
 .coverage*
 .pytest_cache/
 dist/
-build/
+build/artifacts/
+
