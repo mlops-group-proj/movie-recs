@@ -1,0 +1,29 @@
+base:
+  data:
+    ratings_path: ./data/ratings.csv   # overridden by RATINGS_PATH if set
+    user_col: userId
+    item_col: movieId
+    rating_col: rating
+    timestamp_col: timestamp
+  train:
+    model_type: als
+    als_rank: 32
+    als_reg: 0.1
+    als_iters: 10
+    seed: 42
+  eval:
+    top_k: 10
+  logging:
+    level: INFO
+  artifacts:
+    dir: artifacts
+
+dev: {}        # inherits from base
+
+staging:
+  logging:
+    level: INFO
+
+prod:
+  logging:
+    level: INFO
