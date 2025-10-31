@@ -1,0 +1,6 @@
+{
+  "users": 2,
+  "HR@5": 1.0,
+  "NDCG@5": 0.38685280723454163,
+  "model": "baseline:popularity"
+}
