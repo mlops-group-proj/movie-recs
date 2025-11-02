@@ -2,6 +2,10 @@ name: CI Pipeline
 
 on:
   pull_request:
+  push:
+    branches:
+      - main
+      - Arvin
 
 permissions:
   contents: read
@@ -9,8 +13,8 @@ permissions:
 jobs:
   build-test:
     runs-on: ubuntu-latest
-    env:
-      MODEL_VERSION: v0.2   # ✅ ensures pytest sees the right model path
+    name: Build and Test
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -27,93 +31,66 @@ jobs:
         run: |
           pytest --maxfail=1 --disable-warnings -q
 
-
-  build-and-push:
-    needs: build-test
+  quality-gates:
     runs-on: ubuntu-latest
+    name: Quality Gates Validation
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          python-version: '3.11'
+          cache: 'pip'
 
-      - name: Build and push Docker image
+      - name: Install dependencies
         run: |
-          IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/movie-recs
-          IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-          docker build -t $IMAGE_NAME:$IMAGE_TAG -t $IMAGE_NAME:latest -f docker/recommender.Dockerfile .
-          docker push $IMAGE_NAME:$IMAGE_TAG
-          docker push $IMAGE_NAME:latest
-
-
-  build-push-cleanup:
-    needs: build-test
-    runs-on: ubuntu-latest
-
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
-      ECR_REPOSITORY: movie-recs
-      ECR_REGISTRY: 633458675723.dkr.ecr.us-east-2.amazonaws.com/movie-recs:latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v3
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-
-      - name: Log in to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build, tag, and push Docker image
+      - name: Run Quality Gate - Unit Tests
+        id: unit-tests
         run: |
-          IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)
-          IMAGE_LATEST=latest
+          echo "::group::Unit Tests Gate"
+          python scripts/quality_gate.py --gate unit-tests --verbose
+          echo "::endgroup::"
+        continue-on-error: false
 
-          echo "Building Docker image with tags: $IMAGE_TAG and $IMAGE_LATEST"
-
-          docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
-          docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_LATEST
-
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_LATEST
-
-          echo "Pushed $ECR_REPOSITORY:$IMAGE_TAG and $IMAGE_LATEST"
-
-      - name: Clean up old ECR images
+      - name: Run Quality Gate - Schema Validation
+        id: schema-validation
         run: |
-          echo "🧹 Cleaning up old ECR images (keeping last 10)..."
-          IMAGE_IDS=$(aws ecr list-images \
-            --repository-name $ECR_REPOSITORY \
-            --query 'imageIds[?imageTag!=`latest`]|sort_by(@,&imageTag)[::-1]|[10:]' \
-            --output json)
+          echo "::group::Schema Validation Gate"
+          python scripts/quality_gate.py --gate schema-validation --verbose
+          echo "::endgroup::"
+        continue-on-error: false
 
-          if [ "$IMAGE_IDS" != "[]" ]; then
-            echo "Deleting old images..."
-            echo $IMAGE_IDS | jq -c '.[]' | while read -r image; do
-              IMAGE_TAG=$(echo $image | jq -r '.imageTag')
-              echo "Deleting tag: $IMAGE_TAG"
-              aws ecr batch-delete-image \
-                --repository-name $ECR_REPOSITORY \
-                --image-ids "imageTag=$IMAGE_TAG" || true
-            done
+      - name: Run Quality Gate - Backpressure
+        id: backpressure
+        run: |
+          echo "::group::Backpressure Gate"
+          python scripts/quality_gate.py --gate backpressure --verbose
+          echo "::endgroup::"
+        continue-on-error: false
+
+      - name: All Quality Gates Summary
+        if: always()
+        run: |
+          echo "### Quality Gates Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Gate | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Unit Tests | ${{ steps.unit-tests.outcome == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Schema Validation | ${{ steps.schema-validation.outcome == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backpressure Handling | ${{ steps.backpressure.outcome == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ steps.unit-tests.outcome }}" != "success" ]] || \
+             [[ "${{ steps.schema-validation.outcome }}" != "success" ]] || \
+             [[ "${{ steps.backpressure.outcome }}" != "success" ]]; then
+            echo "❌ **One or more quality gates failed**" >> $GITHUB_STEP_SUMMARY
+            exit 1
           else
-            echo "No old images to delete."
+            echo "✅ **All quality gates passed**" >> $GITHUB_STEP_SUMMARY
           fi
-
-          echo "Cleanup complete."
