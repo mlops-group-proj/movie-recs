@@ -1,0 +1,2 @@
+users,k,negatives,hr,ndcg,model,train_path,test_path,items_path,user_col,item_col,rating_col,time_col,seed
+2,10,99,0.0,0.0,baseline:popularity,src/data/interactions_train.csv,src/data/interactions_test.csv,src/data/items.csv,user_id,item_id,rating,timestamp,42

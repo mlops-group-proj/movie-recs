@@ -1,5 +1,6 @@
 """
 Stream ingestor that consumes Kafka messages, validates schemas, and writes to parquet.
+Supports both local filesystem and S3 storage.
 """
 from __future__ import annotations
 
@@ -13,6 +14,14 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 from confluent_kafka import Consumer, KafkaException
 from pydantic import BaseModel, Field
+
+# S3 imports (optional - only used if USE_S3=true)
+try:
+    import boto3
+    from botocore.exceptions import ClientError
+    S3_AVAILABLE = True
+except ImportError:
+    S3_AVAILABLE = False
 
 class WatchEvent(BaseModel):
     user_id: int
@@ -49,9 +58,35 @@ class StreamIngestor:
         storage_path: str = "data/snapshots",
         batch_size: int = 1000,
         flush_interval_sec: int = 300,  # 5 minutes
+        use_s3: bool = False,
+        s3_bucket: Optional[str] = None,
+        s3_prefix: str = "snapshots",
     ):
-        self.storage_path = Path(storage_path)
-        self.storage_path.mkdir(parents=True, exist_ok=True)
+        # Storage configuration
+        self.use_s3 = use_s3 or os.environ.get("USE_S3", "").lower() == "true"
+        self.s3_bucket = s3_bucket or os.environ.get("S3_BUCKET")
+        self.s3_prefix = s3_prefix or os.environ.get("S3_PREFIX", "snapshots")
+        
+        # Initialize S3 client if needed
+        if self.use_s3:
+            if not S3_AVAILABLE:
+                raise ImportError("boto3 is required for S3 storage. Install with: pip install boto3")
+            if not self.s3_bucket:
+                raise ValueError("S3_BUCKET must be set when USE_S3=true")
+            
+            self.s3_client = boto3.client(
+                's3',
+                region_name=os.environ.get("AWS_REGION", "us-east-1"),
+                aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID"),
+                aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY"),
+            )
+            print(f"S3 storage enabled: s3://{self.s3_bucket}/{self.s3_prefix}")
+        else:
+            self.s3_client = None
+            self.storage_path = Path(storage_path)
+            self.storage_path.mkdir(parents=True, exist_ok=True)
+            print(f"Local storage enabled: {self.storage_path}")
+        
         self.batch_size = batch_size
         self.flush_interval_sec = flush_interval_sec
         self.batches: Dict[str, List[Dict[str, Any]]] = {
@@ -100,7 +135,7 @@ class StreamIngestor:
             return None
 
     def _write_batch_to_parquet(self, topic_type: str, batch: List[Dict[str, Any]]) -> None:
-        """Write a batch of messages to a parquet file."""
+        """Write a batch of messages to a parquet file (local or S3)."""
         if not batch:
             return
 
@@ -110,14 +145,35 @@ class StreamIngestor:
         # Create timestamp-based partition path with year-month-day format
         now = datetime.now(UTC)
         date_str = now.strftime('%Y-%m-%d')
-        partition_path = self.storage_path / topic_type / date_str
-        partition_path.mkdir(parents=True, exist_ok=True)
-        
-        # Write parquet file with timestamp in name
         filename = f"batch_{now.strftime('%Y%m%d_%H%M%S')}.parquet"
-        output_path = partition_path / filename
-        df.to_parquet(output_path, index=False)
-        print(f"Wrote {len(batch)} records to {output_path}")
+        
+        if self.use_s3:
+            # Write to S3
+            s3_key = f"{self.s3_prefix}/{topic_type}/{date_str}/{filename}"
+            try:
+                # Write to bytes buffer
+                import io
+                buffer = io.BytesIO()
+                df.to_parquet(buffer, index=False)
+                buffer.seek(0)
+                
+                # Upload to S3
+                self.s3_client.put_object(
+                    Bucket=self.s3_bucket,
+                    Key=s3_key,
+                    Body=buffer.getvalue()
+                )
+                print(f"Wrote {len(batch)} records to s3://{self.s3_bucket}/{s3_key}")
+            except ClientError as e:
+                print(f"Error writing to S3: {e}")
+                raise
+        else:
+            # Write to local filesystem
+            partition_path = self.storage_path / topic_type / date_str
+            partition_path.mkdir(parents=True, exist_ok=True)
+            output_path = partition_path / filename
+            df.to_parquet(output_path, index=False)
+            print(f"Wrote {len(batch)} records to {output_path}")
 
     def _flush_batch(self, topic_type: str) -> None:
         """Flush a batch of messages to storage."""
