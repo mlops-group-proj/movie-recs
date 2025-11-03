@@ -6,12 +6,10 @@ on:
   push:
     branches: [ main ]
 
-permissions:
-  contents: read
-  packages: write  # needed only when we actually push
-
 jobs:
   build-test:
+    name: build-test (pull_request)
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,14 +19,30 @@ jobs:
       - run: pip install -r requirements.txt
       - run: pytest -q
 
-  # ⛔️ Do NOT run on PRs
-  build-and-push:
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.GHCR_PAT != '' }}
+  # Optional: make sure Dockerfile builds on PRs (no push)
+  build-image-pr:
+    name: build-image (pull_request, no push)
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
     needs: build-test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build (no push)
+        env:
+          DOCKERFILE: recommender.Dockerfile   # << use your file name
+        run: |
+          IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)
+          echo "Building Docker image with tags: $IMAGE_TAG (no push)"
+          docker build -f "$DOCKERFILE" -t movie-recs:$IMAGE_TAG .
+
+  # Push only when code lands on main (after merge)
+  build-and-push:
+    name: build-and-push (main)
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
+      packages: write        # needed for GHCR push
     steps:
       - uses: actions/checkout@v4
 
@@ -37,23 +51,30 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}  # leave unset to skip
+          password: ${{ secrets.GHCR_PAT }}   # classic PAT with write:packages & SSO approved
 
       - name: Build image
+        env:
+          DOCKERFILE: recommender.Dockerfile
+          IMAGE_NAME: ghcr.io/${{ github.repository }}/movie-recs
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          IMAGE_NAME=ghcr.io/${{ github.repository }}/movie-recs
-          docker build -f recommender.Dockerfile -t $IMAGE_NAME:${{ github.sha }} .
-          docker tag $IMAGE_NAME:${{ github.sha }} $IMAGE_NAME:latest
+          docker build -f "$DOCKERFILE" -t $IMAGE_NAME:$IMAGE_TAG .
+          docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
 
       - name: Push image
+        env:
+          IMAGE_NAME: ghcr.io/${{ github.repository }}/movie-recs
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          IMAGE_NAME=ghcr.io/${{ github.repository }}/movie-recs
-          docker push $IMAGE_NAME:${{ github.sha }}
+          docker push $IMAGE_NAME:$IMAGE_TAG
           docker push $IMAGE_NAME:latest
 
+  # Optional cleanup job, only after push on main
   build-push-cleanup:
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.GHCR_PAT != '' }}
-    needs: build-and-push
+    name: build-push-cleanup (main)
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
+    needs: build-and-push
     steps:
-      - run: echo "Cleanup step (skipped on PRs)"
+      - run: echo "Cleanup done"
