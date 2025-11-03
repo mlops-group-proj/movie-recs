@@ -4,7 +4,12 @@ on:
   pull_request:
     branches: [ main ]
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - Arvin
+
+permissions:
+  contents: read
 
 jobs:
   build-test:
@@ -18,6 +23,27 @@ jobs:
           python-version: '3.11'
       - run: pip install -r requirements.txt
       - run: pytest -q
+    name: Build and Test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run tests
+        run: |
+          pytest --maxfail=1 --disable-warnings -q
+
+  quality-gates:
+    runs-on: ubuntu-latest
+    name: Quality Gates Validation
 
   # Optional: make sure Dockerfile builds on PRs (no push)
   build-image-pr:
@@ -52,6 +78,8 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PAT }}   # classic PAT with write:packages & SSO approved
+          python-version: '3.11'
+          cache: 'pip'
 
       - name: Build image
         env:
@@ -78,3 +106,47 @@ jobs:
     needs: build-and-push
     steps:
       - run: echo "Cleanup done"
+      - name: Run Quality Gate - Unit Tests
+        id: unit-tests
+        run: |
+          echo "::group::Unit Tests Gate"
+          python scripts/quality_gate.py --gate unit-tests --verbose
+          echo "::endgroup::"
+        continue-on-error: false
+
+      - name: Run Quality Gate - Schema Validation
+        id: schema-validation
+        run: |
+          echo "::group::Schema Validation Gate"
+          python scripts/quality_gate.py --gate schema-validation --verbose
+          echo "::endgroup::"
+        continue-on-error: false
+
+      - name: Run Quality Gate - Backpressure
+        id: backpressure
+        run: |
+          echo "::group::Backpressure Gate"
+          python scripts/quality_gate.py --gate backpressure --verbose
+          echo "::endgroup::"
+        continue-on-error: false
+
+      - name: All Quality Gates Summary
+        if: always()
+        run: |
+          echo "### Quality Gates Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Gate | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Unit Tests | ${{ steps.unit-tests.outcome == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Schema Validation | ${{ steps.schema-validation.outcome == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backpressure Handling | ${{ steps.backpressure.outcome == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ steps.unit-tests.outcome }}" != "success" ]] || \
+             [[ "${{ steps.schema-validation.outcome }}" != "success" ]] || \
+             [[ "${{ steps.backpressure.outcome }}" != "success" ]]; then
+            echo "❌ **One or more quality gates failed**" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "✅ **All quality gates passed**" >> $GITHUB_STEP_SUMMARY
+          fi
