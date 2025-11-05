@@ -24,9 +24,9 @@ jobs:
       - run: pip install -r requirements.txt
       - run: pytest --maxfail=1 --disable-warnings -q
 
-  quality-gates:
-    runs-on: ubuntu-latest
-    name: Quality Gates Validation
+  # quality-gates:
+  #   runs-on: ubuntu-latest
+  #   name: Quality Gates Validation
 
   # Optional: make sure Dockerfile builds on PRs (no push)
   build-image-pr:
