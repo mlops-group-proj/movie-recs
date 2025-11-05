@@ -93,14 +93,15 @@ def run_probe_once():
 # ---------------------------------------------------------------------
 # CLI Entrypoints
 # ---------------------------------------------------------------------
-def main(loop: bool = True):
+def main(loop: bool = True, count: int = 5):
     """Run probe once or repeatedly (used for cron)."""
     if loop:
-        while True:
+        for _ in range(count):
             run_probe_once()
-            time.sleep(60)  # one minute between probes
+            time.sleep(5)  # shorter delay for CI
     else:
         run_probe_once()
+
 
 
 def main_once():
