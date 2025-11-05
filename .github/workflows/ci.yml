@@ -113,7 +113,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build (no push)
         env:
-          DOCKERFILE: recommender.Dockerfile   # << use your file name
+          DOCKERFILE: docker/recommender.Dockerfile
         run: |
           IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)
           echo "Building Docker image with tags: $IMAGE_TAG (no push)"
@@ -135,11 +135,11 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}   # classic PAT with write:packages & SSO approved
+          password: ${{ secrets.GHCR_TOKEN }}  
 
       - name: Build image
         env:
-          DOCKERFILE: recommender.Dockerfile
+          DOCKERFILE: docker/recommender.Dockerfile
           IMAGE_NAME: ghcr.io/${{ github.repository }}/movie-recs
           IMAGE_TAG: ${{ github.sha }}
         run: |
