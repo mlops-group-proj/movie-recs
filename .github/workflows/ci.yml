@@ -35,8 +35,8 @@ jobs:
           MODEL_VERSION: v0.2
 
   quality-gates:
-    runs-on: ubuntu-latest
     name: Quality Gates Validation
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -89,33 +89,19 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Gate | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Unit Tests | ${{ steps.unit-tests.outcome == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Schema Validation | ${{ steps.schema-validation.outcome == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Backpressure Handling | ${{ steps.backpressure.outcome == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Unit Tests | ${{ steps.unit-tests.outcome == 'success' && 'PASS' || 'FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Schema Validation | ${{ steps.schema-validation.outcome == 'success' && 'PASS' || 'FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backpressure Handling | ${{ steps.backpressure.outcome == 'success' && 'PASS' || 'FAIL' }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [[ "${{ steps.unit-tests.outcome }}" != "success" ]] || \
              [[ "${{ steps.schema-validation.outcome }}" != "success" ]] || \
              [[ "${{ steps.backpressure.outcome }}" != "success" ]]; then
-            echo "❌ **One or more quality gates failed**" >> $GITHUB_STEP_SUMMARY
+            echo "**One or more quality gates failed**" >> $GITHUB_STEP_SUMMARY
             exit 1
           else
-            echo "✅ **All quality gates passed**" >> $GITHUB_STEP_SUMMARY
+            echo "**All quality gates passed**" >> $GITHUB_STEP_SUMMARY
           fi
-    name: build-test (pull_request)
-    if: ${{ github.event_name == 'pull_request' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - run: pip install -r requirements.txt
-      - run: pytest --maxfail=1 --disable-warnings -q
-
-  # quality-gates:
-  #   runs-on: ubuntu-latest
-  #   name: Quality Gates Validation
 
   # Optional: make sure Dockerfile builds on PRs (no push)
   build-image-pr:
@@ -149,9 +135,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}   # classic PAT with write:packages & SSO approved
-          python-version: '3.11'
-          cache: 'pip'
+          password: ${{ secrets.GHCR_TOKEN }}
 
       - name: Build image
         env:
