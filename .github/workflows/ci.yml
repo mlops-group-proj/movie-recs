@@ -35,8 +35,8 @@ jobs:
           MODEL_VERSION: v0.2
 
   quality-gates:
-    runs-on: ubuntu-latest
     name: Quality Gates Validation
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -89,18 +89,18 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Gate | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Unit Tests | ${{ steps.unit-tests.outcome == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Schema Validation | ${{ steps.schema-validation.outcome == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Backpressure Handling | ${{ steps.backpressure.outcome == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Unit Tests | ${{ steps.unit-tests.outcome == 'success' && 'PASS' || 'FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Schema Validation | ${{ steps.schema-validation.outcome == 'success' && 'PASS' || 'FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backpressure Handling | ${{ steps.backpressure.outcome == 'success' && 'PASS' || 'FAIL' }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [[ "${{ steps.unit-tests.outcome }}" != "success" ]] || \
              [[ "${{ steps.schema-validation.outcome }}" != "success" ]] || \
              [[ "${{ steps.backpressure.outcome }}" != "success" ]]; then
-            echo "❌ **One or more quality gates failed**" >> $GITHUB_STEP_SUMMARY
+            echo "**One or more quality gates failed**" >> $GITHUB_STEP_SUMMARY
             exit 1
           else
-            echo "✅ **All quality gates passed**" >> $GITHUB_STEP_SUMMARY
+            echo "**All quality gates passed**" >> $GITHUB_STEP_SUMMARY
           fi
     name: build-test (pull_request)
     if: ${{ github.event_name == 'pull_request' }}
@@ -158,7 +158,7 @@ jobs:
           DOCKERFILE: docker/recommender.Dockerfile
           IMAGE_NAME: ghcr.io/${{ github.repository }}/movie-recs
           IMAGE_TAG: ${{ github.sha }}
-        run: |
+        run: |\\
           docker build -f "$DOCKERFILE" -t $IMAGE_NAME:$IMAGE_TAG .
           docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
 
