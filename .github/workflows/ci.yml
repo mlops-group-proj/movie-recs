@@ -21,7 +21,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.9"
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
@@ -43,7 +43,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_TOKEN }}
 
       - name: Build and push image
         uses: docker/build-push-action@v5
@@ -52,6 +52,6 @@ jobs:
           file: docker/recommender.Dockerfile
           push: true
           # HARD-CODED, ALL LOWERCASE:
-          tags: ghcr.io/lakshminarayanalatchireddi/movie-recs/reco:${{ github.sha }}
+          tags: ghcr.io/${{ github.repository }}/reco:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
