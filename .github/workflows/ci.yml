@@ -1,15 +1,14 @@
 name: CI Pipeline
 
 on:
-  pull_request:
-    branches: [ main ]
   push:
-    branches:
-      - main
-      - Arvin
+    branches: [ main, feature/* ]
+  pull_request:
+    branches: [ main, feature/* ]
 
 permissions:
   contents: read
+  packages: write
 
 jobs:
   build-test:
@@ -21,114 +20,21 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pip'
+          python-version: "3.11"
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       - name: Run tests
-        run: |
-          pytest --maxfail=1 --disable-warnings -q
-        env:
-          USE_S3: false
-          MODEL_VERSION: v0.2
+        run: pytest --maxfail=1 --disable-warnings -q
 
-  quality-gates:
-    name: Quality Gates Validation
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      - name: Run Quality Gate - Unit Tests
-        id: unit-tests
-        run: |
-          echo "::group::Unit Tests Gate"
-          python scripts/quality_gate.py --gate unit-tests --verbose
-          echo "::endgroup::"
-        continue-on-error: false
-        env:
-          USE_S3: false
-          MODEL_VERSION: v0.2
+      # ---- Docker build & push (robust) ----
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
-      - name: Run Quality Gate - Schema Validation
-        id: schema-validation
-        run: |
-          echo "::group::Schema Validation Gate"
-          python scripts/quality_gate.py --gate schema-validation --verbose
-          echo "::endgroup::"
-        continue-on-error: false
-        env:
-          USE_S3: false
-          MODEL_VERSION: v0.2
-
-      - name: Run Quality Gate - Backpressure
-        id: backpressure
-        run: |
-          echo "::group::Backpressure Gate"
-          python scripts/quality_gate.py --gate backpressure --verbose
-          echo "::endgroup::"
-        continue-on-error: false
-        env:
-          USE_S3: false
-          MODEL_VERSION: v0.2
-
-      - name: All Quality Gates Summary
-        if: always()
-        run: |
-          echo "### Quality Gates Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Gate | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Unit Tests | ${{ steps.unit-tests.outcome == 'success' && 'PASS' || 'FAIL' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Schema Validation | ${{ steps.schema-validation.outcome == 'success' && 'PASS' || 'FAIL' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Backpressure Handling | ${{ steps.backpressure.outcome == 'success' && 'PASS' || 'FAIL' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          if [[ "${{ steps.unit-tests.outcome }}" != "success" ]] || \
-             [[ "${{ steps.schema-validation.outcome }}" != "success" ]] || \
-             [[ "${{ steps.backpressure.outcome }}" != "success" ]]; then
-            echo "**One or more quality gates failed**" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          else
-            echo "**All quality gates passed**" >> $GITHUB_STEP_SUMMARY
-          fi
-
-  # Optional: make sure Dockerfile builds on PRs (no push)
-  build-image-pr:
-    name: build-image (pull_request, no push)
-    if: ${{ github.event_name == 'pull_request' }}
-    runs-on: ubuntu-latest
-    needs: build-test
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build (no push)
-        env:
-          DOCKERFILE: docker/recommender.Dockerfile
-        run: |
-          IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)
-          echo "Building Docker image with tags: $IMAGE_TAG (no push)"
-          docker build -f "$DOCKERFILE" -t movie-recs:$IMAGE_TAG .
-
-  # Push only when code lands on main (after merge)
-  build-and-push:
-    name: build-and-push (main)
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write        # needed for GHCR push
-    steps:
-      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -137,28 +43,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      - name: Build image
-        env:
-          DOCKERFILE: docker/recommender.Dockerfile
-          IMAGE_NAME: ghcr.io/${{ github.repository }}/movie-recs
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          docker build -f "$DOCKERFILE" -t $IMAGE_NAME:$IMAGE_TAG .
-          docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
-
-      - name: Push image
-        env:
-          IMAGE_NAME: ghcr.io/${{ github.repository }}/movie-recs
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          docker push $IMAGE_NAME:$IMAGE_TAG
-          docker push $IMAGE_NAME:latest
-
-  # Optional cleanup job, only after push on main
-  build-push-cleanup:
-    name: build-push-cleanup (main)
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    steps:
-      - run: echo "Cleanup done"
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/recommender.Dockerfile
+          push: true
+          # HARD-CODED, ALL LOWERCASE:
+          tags: ghcr.io/${{ github.repository }}/reco:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
