@@ -60,7 +60,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}   # classic PAT with write:packages & SSO approved
+          password: ${{ secrets.GHCR_TOKEN }}   # classic PAT with write:packages & SSO approved
           python-version: '3.11'
           cache: 'pip'
 
