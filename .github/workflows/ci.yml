@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build (no push)
         env:
-          DOCKERFILE: recommender.Dockerfile   # << use your file name
+          DOCKERFILE: /docker/recommender.Dockerfile   # << use your file name
         run: |
           IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)
           echo "Building Docker image with tags: $IMAGE_TAG (no push)"
