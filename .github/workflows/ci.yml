@@ -102,6 +102,20 @@ jobs:
           else
             echo "✅ **All quality gates passed**" >> $GITHUB_STEP_SUMMARY
           fi
+    name: build-test (pull_request)
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - run: pytest --maxfail=1 --disable-warnings -q
+
+  # quality-gates:
+  #   runs-on: ubuntu-latest
+  #   name: Quality Gates Validation
 
   # Optional: make sure Dockerfile builds on PRs (no push)
   build-image-pr:
@@ -135,7 +149,9 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}  
+          password: ${{ secrets.GHCR_TOKEN }}   # classic PAT with write:packages & SSO approved
+          python-version: '3.11'
+          cache: 'pip'
 
       - name: Build image
         env:
