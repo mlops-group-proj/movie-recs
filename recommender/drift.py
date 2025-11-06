@@ -19,7 +19,7 @@ import matplotlib
 matplotlib.use("Agg")  # must be called before importing pyplot
 import matplotlib.pyplot as plt
 
-ROOT = pathlib.Path(__file__).resolve().parents[2]
+ROOT = pathlib.Path(__file__).resolve().parents[1]
 DATA = ROOT / "data/ml1m_prepared"
 OUT  = ROOT / "model_registry" / "v_drift"
 OUT.mkdir(parents=True, exist_ok=True)

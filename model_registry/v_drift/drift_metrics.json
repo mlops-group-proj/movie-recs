@@ -1,0 +1,22 @@
+{
+  "schema_match": true,
+  "missing_cols": [],
+  "drift_metrics": {
+    "user": {
+      "kl_divergence": 0.49094649982751287,
+      "wasserstein": 0.0001327833653248971,
+      "n_train": 994169,
+      "n_test": 6040
+    },
+    "item": {
+      "kl_divergence": 2.4302978586759387,
+      "wasserstein": 6.0758679991736994e-05,
+      "n_train": 994169,
+      "n_test": 6040
+    }
+  },
+  "aggregate": {
+    "avg_kl": 1.4606221792517258,
+    "avg_wasserstein": 9.677102265831705e-05
+  }
+}
