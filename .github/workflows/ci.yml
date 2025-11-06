@@ -48,6 +48,12 @@ jobs:
       run: pytest -q tests/test_schemas.py
 
       # Smoke tests: offline eval + drift check
+
+    - name: Verify data files
+      run: |
+        echo "Verifying dataset:"
+        ls -lh data/ml1m_prepared
+        echo "Dataset verification complete."
     - name: Run offline evaluation
       run: python experiments/ml1m_baselines/train_itemcf.py
 
