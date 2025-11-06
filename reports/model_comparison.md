@@ -1,9 +1,13 @@
-# Model Comparison
+# 📊 Model Comparison Summary
 
-Combined quality and performance at top-K.
+This table combines model accuracy, training cost, and inference latency.
 
-| model      | version   |   k |   HR@K |   NDCG@K |   train_seconds |   peak_mem_mb |   p50_ms |   p95_ms |
-|:-----------|:----------|----:|-------:|---------:|----------------:|--------------:|---------:|---------:|
-| popularity | v0.1      |  10 | 0.121  |   0.064  |            0    |           nan |     0.18 |     0.49 |
-| itemcf     | v0.1      |  10 | 0.2303 |   0.1275 |            0    |           nan |    41.06 |   251.4  |
-| als        | v0.2      |  10 | 0.016  |   0.0075 |            1.17 |           nan |     0.49 |     1.04 |
+Generated automatically by `compare.py`.
+
+
+| model      |   k |      HR@K |    NDCG@K |   train_seconds |   model_size_MB |      p50_ms |      p95_ms |
+|:-----------|----:|----------:|----------:|----------------:|----------------:|------------:|------------:|
+| ncf        |  10 | 0.137252  | 0.0668516 |       376.469   |            5.28 | 0.035541    | 0.0494473   |
+| als        |  10 | 0.0988411 | 0.0489501 |         3.08029 |            2.58 | 0.0635835   | 0.0735861   |
+| itemcf     |  10 | 0.0753311 | 0.0401158 |         6.23108 |           90.52 | 0.021458    | 0.0284191   |
+| popularity |  10 | 0.0437086 | 0.0223218 |         1.11825 |            0.01 | 8.30041e-05 | 0.000125001 |

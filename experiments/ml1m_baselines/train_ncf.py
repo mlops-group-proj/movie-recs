@@ -149,6 +149,13 @@ def main():
         "train_seconds": time.time() - t0,
         "model_size_bytes": (ART / "model.pt").stat().st_size
     }
+    
+    meta.update({
+    "n_users": int(n_users),
+    "n_items": int(n_items),
+    "emb": int(E)
+})
+
 
     (ART / "meta.json").write_text(json.dumps(meta, indent=2))
     print(json.dumps(meta, indent=2))
