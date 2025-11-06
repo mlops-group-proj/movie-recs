@@ -34,6 +34,9 @@ jobs:
     # ------------------------------------------------------------------
     # Quality gates (Milestone 3)
     # ------------------------------------------------------------------
+    - name: List schema files (debug)
+      run: ls -R stream/schemas
+
     - name: Run unit tests + coverage
       run: |
         pytest --maxfail=1 --disable-warnings --cov=. --cov-report=term-missing

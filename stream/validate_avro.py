@@ -1,14 +1,20 @@
-import json, fastavro, pathlib
-from fastavro.validation import validate_many
+import pathlib, fastavro, json
 
-ROOT = pathlib.Path(__file__).resolve().parents[2]
-SCHEMA_DIR = ROOT / "stream/schemas"
+HERE = pathlib.Path(__file__).resolve().parent
+SCHEMA_DIR = HERE / "schemas"
+
+def load(name):
+    path = SCHEMA_DIR / f"{name}.avsc"
+    if not path.exists():
+        raise FileNotFoundError(f"Missing schema file: {path}")
+    return fastavro.schema.load_schema(path)
 
 SCHEMAS = {
-    "watch": fastavro.schema.load_schema(SCHEMA_DIR / "watch.avsc"),
-    "rate": fastavro.schema.load_schema(SCHEMA_DIR / "rate.avsc"),
-    "reco_response": fastavro.schema.load_schema(SCHEMA_DIR / "reco_response.avsc"),
+    "watch": load("watch"),
+    "rate": load("rate"),
+    "reco_response": load("reco_response"),
 }
+
 
 def validate_record(record, schema_name: str) -> bool:
     """Validate a single JSON record against an Avro schema."""
