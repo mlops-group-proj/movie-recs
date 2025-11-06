@@ -264,4 +264,4 @@ log.info(f"Users evaluated : {metrics['users']}")
 log.info(f"HR@{k}          : {metrics['hr']:.4f}")
 log.info(f"NDCG@{k}        : {metrics['ndcg']:.4f}")
 
-return metrics
+#return metrics
