@@ -36,7 +36,8 @@ jobs:
     # ------------------------------------------------------------------
     - name: List schema files (debug)
       run: ls -R stream/schemas
-
+    - name: Set PYTHONPATH
+      run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)" >> $GITHUB_ENV
     - name: Run unit tests + coverage
       run: |
         pytest --maxfail=1 --disable-warnings --cov=. --cov-report=term-missing
@@ -46,8 +47,9 @@ jobs:
     - name: Validate Avro schemas
       run: pytest -q tests/test_schemas.py
 
+      # Smoke tests: offline eval + drift check
     - name: Run offline evaluation
-      run: python recommender/train_itemcf.py
+      run: python experiments/ml1m_baselines/train_itemcf.py
 
     - name: Check for drift
       run: python recommender/drift.py
