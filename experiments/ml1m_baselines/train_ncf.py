@@ -11,11 +11,11 @@ REG  = ROOT / "model_registry"; REG.mkdir(exist_ok=True)
 ART  = REG / "v_ncf"; ART.mkdir(exist_ok=True)
 
 K       = int(os.getenv("K", "10"))
-E       = int(os.getenv("NCF_EMB", "64"))
-EPOCHS  = int(os.getenv("NCF_EPOCHS", "3"))
+E       = int(os.getenv("NCF_EMB", "128"))
+EPOCHS  = int(os.getenv("NCF_EPOCHS", "15"))
 BATCH   = int(os.getenv("NCF_BATCH", "8192"))
 LR      = float(os.getenv("NCF_LR", "0.001"))
-NEG     = int(os.getenv("NCF_NEG", "4"))
+NEG     = int(os.getenv("NCF_NEG", "8"))
 
 
 # ---------------------------------------------------------------------
