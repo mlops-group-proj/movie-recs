@@ -1,8 +1,10 @@
-# Cloud-Native Recommender
+[![Probes](https://github.com/mlops-group-proj/movie-recs/actions/workflows/probes.yml/badge.svg)](https://github.com/mlops-group-proj/movie-recs/actions/workflows/probes.yml)<!-- CI/CD & Coverage Badges -->
+[![CI & CD Pipeline](https://github.com/mlops-group-proj/movie-recs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mlops-group-proj/movie-recs/actions/workflows/ci.yml)
+[![Coverage Status](https://img.shields.io/badge/coverage-report-brightgreen.svg)](reports/coverage.xml)
+[![ECS Deploy](https://img.shields.io/badge/deploy-AWS ECS-blue.svg?logo=amazonaws)](https://us-east-2.console.aws.amazon.com/ecs/v2/clusters/movie-recs-cluster-v2/services/movie-recs-task-service-4xo8z7x0/details)
+[![Python 3.11](https://img.shields.io/badge/python-3.11-yellow.svg?logo=python)](https://www.python.org/)
 
-[![Probes](https://github.com/mlops-group-proj/movie-recs/actions/workflows/probes.yml/badge.svg)](https://github.com/mlops-group-proj/movie-recs/actions/workflows/probes.yml)
-[![CI](https://github.com/mlops-group-proj/movie-recs/actions/workflows/ci.yml/badge.svg)](https://github.com/mlops-group-proj/movie-recs/actions/workflows/ci.yml)
-[![CD](https://github.com/mlops-group-proj/movie-recs/actions/workflows/cd.yml/badge.svg)](https://github.com/mlops-group-proj/movie-recs/actions/workflows/cd.yml)
+# Cloud-Native Recommender
 
 ## Quickstart
 

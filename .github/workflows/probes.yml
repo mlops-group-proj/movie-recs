@@ -24,3 +24,16 @@ jobs:
           for i in 1 2 3; do
             python scripts/probe.py && break || sleep 30
           done
+      - name: Compute online KPI
+        run: |
+          python scripts/online_metric.py \
+            --bootstrap ${{ secrets.KAFKA_BOOTSTRAP }} \
+            --api-key ${{ secrets.KAFKA_API_KEY }} \
+            --api-secret ${{ secrets.KAFKA_API_SECRET }} \
+            --team myteam --window-min 10 --limit 2000
+
+      - name: Upload KPI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: online_kpi
+          path: reports/*.csv

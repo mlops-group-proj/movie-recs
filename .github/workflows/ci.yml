@@ -1,55 +1,102 @@
-name: CI Pipeline
+name: CI & CD Pipeline
 
 on:
-  push:
-    branches: [ main, feature/* ]
   pull_request:
-    branches: [ main, feature/* ]
+  push:
+    branches: [main]
 
 permissions:
   contents: read
-  packages: write
+  id-token: write
 
 jobs:
-  build-test:
-    name: Build and Test
+  build-test-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+    # ------------------------------------------------------------------
+    # Checkout & Python setup
+    # ------------------------------------------------------------------
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      - name: Run tests
-        run: pytest --maxfail=1 --disable-warnings -q
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
 
-      # ---- Docker build & push (robust) ----
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+    # ------------------------------------------------------------------
+    # Quality gates (Milestone 3)
+    # ------------------------------------------------------------------
+    - name: Run unit tests + coverage
+      run: |
+        pytest --maxfail=1 --disable-warnings --cov=. --cov-report=term-missing
+        coverage xml
+      continue-on-error: false
 
-      - name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}
+    - name: Validate Avro schemas
+      run: pytest -q tests/test_schemas.py
 
-      - name: Build and push image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/recommender.Dockerfile
-          push: true
-          # HARD-CODED, ALL LOWERCASE:
-          tags: ghcr.io/${{ github.repository }}/reco:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+    - name: Run offline evaluation
+      run: python recommender/train_itemcf.py
+
+    - name: Check for drift
+      run: python recommender/drift.py
+
+    # ------------------------------------------------------------------
+    # Build & push container (ECS)
+    # ------------------------------------------------------------------
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Log in to Amazon ECR
+      id: ecr-login
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Build, tag, and push Docker image
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+        ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+        IMAGE_TAG: v${{ github.run_number }}
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f docker/recommender.Dockerfile .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+    # ------------------------------------------------------------------
+    # Deploy to ECS service
+    # ------------------------------------------------------------------
+    - name: Deploy ECS service
+      env:
+        CLUSTER: ${{ secrets.ECS_CLUSTER }}
+        SERVICE: ${{ secrets.ECS_SERVICE }}
+        CONTAINER_NAME: ${{ secrets.ECS_CONTAINER }}
+        IMAGE_URI: ${{ steps.build-image.outputs.image }}
+      run: |
+        aws ecs update-service \
+          --cluster $CLUSTER \
+          --service $SERVICE \
+          --force-new-deployment \
+          --desired-count 1 \
+          --region ${{ secrets.AWS_REGION }}
+
+    # ------------------------------------------------------------------
+    # Report summary
+    # ------------------------------------------------------------------
+    - name: Summarize results
+      run: |
+        echo "### CI/CD Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- Tests & coverage: ✅" >> $GITHUB_STEP_SUMMARY
+        echo "- Avro schemas validated" >> $GITHUB_STEP_SUMMARY
+        echo "- Offline eval + drift check complete" >> $GITHUB_STEP_SUMMARY
+        echo "- Image deployed to ECS: ${{ steps.build-image.outputs.image }}" >> $GITHUB_STEP_SUMMARY

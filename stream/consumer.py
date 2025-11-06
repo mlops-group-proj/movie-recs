@@ -8,6 +8,8 @@ from typing import Optional, Dict, Any
 
 from recommender.schemas import validate_message
 
+from stream.validate_avro import validate_record
+
 
 def _kafka_conf() -> dict:
     """Load Kafka configuration from environment variables."""
@@ -76,6 +78,17 @@ def consume_one_message(topic: Optional[str] = None, timeout_sec: float = 2.0) -
         print(f"[consume-error] {e}")
         # Fallback: still return something valid so tests pass
         return f"hello (mock due to error) from {topic}"
+
+
+def process_message(msg):
+    topic = msg.topic()
+    schema_name = topic.split(".")[-1].replace("-", "_")
+    record = json.loads(msg.value().decode("utf-8"))
+    if not validate_record(record, schema_name):
+        # skip bad message, log, or send to dead-letter topic
+        return None
+    return record
+
 
 
 def main() -> None:

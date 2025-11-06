@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "WatchEvent",
+  "namespace": "mlprod",
+  "fields": [
+    {"name": "ts", "type": "long"},
+    {"name": "user_id", "type": "int"},
+    {"name": "movie_id", "type": "int"},
+    {"name": "minute", "type": "int"}
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "RecoResponse",
+  "namespace": "mlprod",
+  "fields": [
+    {"name": "ts", "type": "long"},
+    {"name": "user_id", "type": "int"},
+    {"name": "status", "type": "int"},
+    {"name": "latency_ms", "type": "int"},
+    {"name": "k", "type": "int"},
+    {"name": "movie_ids", "type": {"type": "array", "items": "int"}}
+  ]
+}
