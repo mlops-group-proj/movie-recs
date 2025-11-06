@@ -18,3 +18,4 @@ tabulate
 tqdm
 pytest-cov
 requests
+httpx
