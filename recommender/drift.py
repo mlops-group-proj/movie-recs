@@ -14,6 +14,9 @@ import pandas as pd
 import numpy as np
 import json, pathlib, os
 from scipy.stats import entropy, wasserstein_distance
+# --- Ensure headless plotting works in CI (no GUI required) ---
+import matplotlib
+matplotlib.use("Agg")  # must be called before importing pyplot
 import matplotlib.pyplot as plt
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
