@@ -88,17 +88,16 @@ jobs:
 
     - name: Build, tag, and push Docker image
       id: build-image
-      env:
-        ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
-        ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-        IMAGE_TAG: v${{ github.run_number }}
       run: |
-        echo "Registry: $ECR_REGISTRY"
-        echo "Repo: $ECR_REPOSITORY"
-        echo "Tag: $IMAGE_TAG"
+        ECR_REGISTRY=${{ steps.ecr-login.outputs.registry }}
+        ECR_REPOSITORY=${{ secrets.ECR_REPOSITORY }}
+        IMAGE_TAG=v${{ github.run_number }}
+
+        echo "Building image for $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f docker/recommender.Dockerfile .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
 
     # ------------------------------------------------------------------
     # Deploy to ECS service
