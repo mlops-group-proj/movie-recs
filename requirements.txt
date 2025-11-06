@@ -16,3 +16,4 @@ implicit
 torch==2.4.0
 tabulate
 tqdm
+pytest-cov
