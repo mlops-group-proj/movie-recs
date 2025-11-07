@@ -73,12 +73,12 @@ jobs:
     - name: Run offline evaluation (ItemCF)
       run: python experiments/ml1m_baselines/train_itemcf.py
 
-    # 🟢 Drift quality gate: fails if PSI exceeds threshold
+    # Drift quality gate: fails if PSI exceeds threshold
     - name: Run drift detection
       id: drift
       continue-on-error: false
       run: |
-        echo "🔎 Checking for data drift..."
+        echo "Checking for data drift..."
         python -m recommender.drift --threshold 0.25
 
     # ------------------------------------------------------------------
@@ -134,7 +134,7 @@ jobs:
     - name: Summarize results
       run: |
         echo "### CI/CD Summary" >> $GITHUB_STEP_SUMMARY
-        echo "- Unit tests & coverage complete" >> $GITHUB_STEP_SUMMARY
-        echo "- Offline evaluation completed" >> $GITHUB_STEP_SUMMARY
-        echo "- Drift check passed (PSI < 0.25)" >> $GITHUB_STEP_SUMMARY
-        echo "- Image deployed: ${{ steps.build-image.outputs.image }}" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Unit tests & coverage complete" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Offline evaluation completed" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Drift check passed (PSI < 0.25)" >> $GITHUB_STEP_SUMMARY
+        echo "- 🚀 Image deployed: ${{ steps.build-image.outputs.image }}" >> $GITHUB_STEP_SUMMARY
