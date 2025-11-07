@@ -1,16 +1,21 @@
 # service/app.py
 from fastapi import FastAPI, HTTPException
-from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
 import os
 from recommender.factory import get_recommender
+from recommender import drift  # 👈 import your drift module
 
 app = FastAPI(title="Movie Recommender API")
 
-# Prometheus metrics
+# ------------------------------------------------------------------
+# Prometheus base metrics
+# ------------------------------------------------------------------
 REQS = Counter("recommend_requests_total", "Requests", ["status"])
 LAT = Histogram("recommend_latency_seconds", "Latency")
 
+# ------------------------------------------------------------------
 # Load model once at startup
+# ------------------------------------------------------------------
 MODEL_NAME = os.getenv("MODEL_NAME", "als")
 MODEL_VERSION = os.getenv("MODEL_VERSION", "v0.2")
 recommender = get_recommender(MODEL_NAME)
@@ -40,5 +45,30 @@ def recommend(user_id: int, k: int = 20, model: str | None = None):
 
 @app.get("/metrics")
 def metrics():
-    """Prometheus-compatible metrics."""
-    return generate_latest(), 200, {"Content-Type": CONTENT_TYPE_LATEST}
+    """
+    Prometheus-compatible metrics endpoint.
+    Exposes request/latency metrics + drift metrics (PSI per feature).
+    """
+    # Base metrics from Prometheus client (requests, latency, etc.)
+    output = generate_latest()
+
+    # ------------------------------------------------------------------
+    # Drift metrics (PSI per feature)
+    # ------------------------------------------------------------------
+    try:
+        psi_metric = Gauge("data_drift_psi", "Population Stability Index", ["feature"])
+        results, _, _ = drift.run_drift(threshold=0.25)
+
+        for feature, vals in results["drift_metrics"].items():
+            psi_value = vals.get("psi", 0.0)
+            psi_metric.labels(feature=feature).set(psi_value)
+
+        # Merge new drift metrics into Prometheus exposition
+        drift_output = generate_latest()
+        output += drift_output
+    except Exception as e:
+        # Do not break /metrics if drift check fails
+        import logging
+        logging.warning(f"Drift metrics unavailable: {e}")
+
+    return output, 200, {"Content-Type": CONTENT_TYPE_LATEST}
