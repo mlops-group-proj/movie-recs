@@ -15,8 +15,24 @@ jobs:
       KAFKA_TEAM: ${{ secrets.KAFKA_TEAM }}
     steps:
       - uses: actions/checkout@v4
+
+      # ----------------------------------------------------------
+# Install dependencies before running probe or metrics
+# ----------------------------------------------------------
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
       - name: Install dependencies
-        run: pip install requests confluent-kafka
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            pip install pandas numpy requests
+          fi
+
       - name: Run probe
         run: python scripts/probe.py
       - name: Retry on transient errors
