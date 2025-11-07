@@ -1,9 +1,9 @@
 name: CI & CD Pipeline
 
 on:
-  pull_request:
   push:
     branches: [main]
+  pull_request:
 
 permissions:
   contents: read
@@ -32,48 +32,45 @@ jobs:
         pip install -r requirements.txt
 
     # ------------------------------------------------------------------
-    # Quality gates (Milestone 3)
+    # Quality gates & Unit tests with coverage
     # ------------------------------------------------------------------
-    - name: List schema files (debug)
-      run: ls -R stream/schemas
     - name: Set PYTHONPATH
-      run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)" >> $GITHUB_ENV
+      run: echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
+
     - name: Run unit tests + coverage
       run: |
-        pytest --maxfail=1 --disable-warnings --cov=. --cov-report=term-missing
-        coverage xml
-      continue-on-error: false
-
-    - name: Validate Avro schemas
-      run: pytest -q tests/test_schemas.py
-
-      # Smoke tests: offline eval + drift check
-
-    - name: Verify data files
-      run: |
-        echo "Verifying dataset:"
-        ls -lh data/ml1m_prepared
-        echo "Dataset verification complete."
-    - name: Run offline evaluation
-      run: python experiments/ml1m_baselines/train_itemcf.py
-
-    - name: Check for drift
-      run: python recommender/drift.py
+        mkdir -p reports
+        pytest --maxfail=1 --disable-warnings \
+          --cov=. \
+          --cov-report=term-missing \
+          --cov-report=xml:reports/coverage.xml
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        files: coverage.xml
+        files: reports/coverage.xml
         flags: unittests
         fail_ci_if_error: true
+        verbose: true
 
+    # ------------------------------------------------------------------
+    # Smoke tests (Offline eval + drift detection)
+    # ------------------------------------------------------------------
+    - name: Verify data files
+      run: |
+        echo "Verifying dataset:"
+        ls -lh data/ml1m_prepared
+
+    - name: Run offline evaluation (ItemCF)
+      run: python experiments/ml1m_baselines/train_itemcf.py
+
+    - name: Check for drift
+      run: python recommender/drift.py
 
     # ------------------------------------------------------------------
     # Deploy to AWS ECS via ECR
     # ------------------------------------------------------------------
-
-    # Configure AWS credentials (required for all AWS steps)
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -81,7 +78,6 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
 
-    # Log in to Amazon ECR (uses region from credentials)
     - name: Log in to Amazon ECR
       id: ecr-login
       uses: aws-actions/amazon-ecr-login@v2
@@ -89,52 +85,35 @@ jobs:
         registry-type: private
         mask-password: true
 
-    - name: Debug ECR variables
-      run: |
-        echo "Registry: ${{ steps.ecr-login.outputs.registry }}"
-        echo "Repo: ${{ secrets.ECR_REPOSITORY }}"
-        echo "Region: ${{ secrets.AWS_REGION }}"
-
-    # Build, tag, and push Docker image
     - name: Build, tag, and push Docker image
       id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+        ECR_REPOSITORY: movie-recs
+        IMAGE_TAG: v${{ github.run_number }}
       run: |
-        # -- Capture variables explicitly inside the shell --
-        ECR_REGISTRY="${{ steps.ecr-login.outputs.registry }}"
-        ECR_REPOSITORY=movie-recs
-        IMAGE_TAG="v${{ github.run_number }}"
-
-        echo "🛠️ Building image for: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-
-        if [ -z "$ECR_REPOSITORY" ]; then
-          echo "❌ ECR_REPOSITORY is empty! Check repo secret name and spelling."
-          exit 1
-        fi
-
+        echo "🛠️ Building image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
         docker build -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" -f docker/recommender.Dockerfile .
         echo "📦 Pushing image to ECR..."
         docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-
-    # Deploy to ECS service
     - name: Deploy ECS service
+      if: github.ref == 'refs/heads/main'
       env:
         CLUSTER: ${{ secrets.ECS_CLUSTER }}
         SERVICE: ${{ secrets.ECS_SERVICE }}
-        CONTAINER_NAME: ${{ secrets.ECS_CONTAINER }}
         IMAGE_URI: ${{ steps.build-image.outputs.image }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
       run: |
-        echo " Deploying ECS service..."
+        echo "🚀 Deploying ECS service..."
         aws ecs update-service \
           --cluster "$CLUSTER" \
           --service "$SERVICE" \
           --force-new-deployment \
           --desired-count 1 \
-          --region ${{ secrets.AWS_REGION }}
-
-        echo "ECS service update triggered successfully."
-
+          --region "$AWS_REGION"
+        echo "✅ ECS service update triggered successfully."
 
     # ------------------------------------------------------------------
     # Report summary
@@ -142,7 +121,7 @@ jobs:
     - name: Summarize results
       run: |
         echo "### CI/CD Summary" >> $GITHUB_STEP_SUMMARY
-        echo "- Tests & coverage: ✅" >> $GITHUB_STEP_SUMMARY
-        echo "- Avro schemas validated" >> $GITHUB_STEP_SUMMARY
-        echo "- Offline eval + drift check complete" >> $GITHUB_STEP_SUMMARY
-        echo "- Image deployed to ECS: ${{ steps.build-image.outputs.image }}" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Unit tests & coverage complete" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Avro schema validated" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Offline eval & drift check passed" >> $GITHUB_STEP_SUMMARY
+        echo "- 🚀 Image deployed: ${{ steps.build-image.outputs.image }}" >> $GITHUB_STEP_SUMMARY
