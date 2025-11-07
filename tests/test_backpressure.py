@@ -9,7 +9,7 @@ Tests:
 """
 import sys
 from pathlib import Path
-from datetime import datetime, UTC, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import Mock, patch, MagicMock
 import json
 import tempfile
@@ -57,7 +57,7 @@ class TestBackpressureHandling:
                 ingestor.batches["watch"].append({
                     "user_id": i,
                     "movie_id": i + 100,
-                    "timestamp": datetime.now(UTC).isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 })
             
             print(f"Added {batch_size} messages to watch batch")
@@ -110,8 +110,8 @@ class TestBackpressureHandling:
             
             # Simulate time passing
             import time
-            last_flush_time = datetime.now(UTC) - timedelta(seconds=flush_interval + 1)
-            now = datetime.now(UTC)
+            last_flush_time = datetime.now(timezone.utc) - timedelta(seconds=flush_interval + 1)
+            now = datetime.now(timezone.utc)
             
             # Check if time threshold is met
             if (now - last_flush_time).total_seconds() >= flush_interval:
@@ -156,26 +156,26 @@ class TestBackpressureHandling:
                     msg = {
                         "user_id": i,
                         "movie_id": i + 100,
-                        "timestamp": datetime.now(UTC).isoformat()
+                        "timestamp": datetime.now(timezone.utc).isoformat()
                     }
                 elif topic == "rate":
                     msg = {
                         "user_id": i,
                         "movie_id": i + 100,
                         "rating": 4.5,
-                        "timestamp": datetime.now(UTC).isoformat()
+                        "timestamp": datetime.now(timezone.utc).isoformat()
                     }
                 elif topic == "reco_requests":
                     msg = {
                         "user_id": i,
-                        "timestamp": datetime.now(UTC).isoformat()
+                        "timestamp": datetime.now(timezone.utc).isoformat()
                     }
                 else:  # reco_responses
                     msg = {
                         "user_id": i,
                         "movie_ids": [i + 100, i + 101, i + 102],
                         "scores": [0.9, 0.8, 0.7],
-                        "timestamp": datetime.now(UTC).isoformat()
+                        "timestamp": datetime.now(timezone.utc).isoformat()
                     }
                 
                 ingestor.batches[topic].append(msg)
@@ -238,7 +238,7 @@ class TestBackpressureHandling:
             ingestor.batches["watch"].append({
                 "user_id": i,
                 "movie_id": i + 100,
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "msg_id": msg_id  # Track message
             })
             
@@ -312,7 +312,7 @@ class TestBackpressureHandling:
                 ingestor.batches["watch"].append({
                     "user_id": metrics["total_messages"],
                     "movie_id": metrics["total_messages"] + 100,
-                    "timestamp": datetime.now(UTC).isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 })
                 metrics["total_messages"] += 1
                 
