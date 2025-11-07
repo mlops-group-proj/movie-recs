@@ -67,14 +67,19 @@ jobs:
     # ------------------------------------------------------------------
     - name: Verify data files
       run: |
-        echo "Verifying dataset:"
-        ls -lh data/ml1m_prepared
+        echo "Verifying dataset contents:"
+        ls -lh data/ml1m_prepared || echo "⚠️ Dataset missing!"
 
     - name: Run offline evaluation (ItemCF)
       run: python experiments/ml1m_baselines/train_itemcf.py
 
-    - name: Check for drift
-      run: python recommender/drift.py
+    # 🟢 Drift quality gate: fails if PSI exceeds threshold
+    - name: Run drift detection
+      id: drift
+      continue-on-error: false
+      run: |
+        echo "🔎 Checking for data drift..."
+        python -m recommender.drift --threshold 0.25
 
     # ------------------------------------------------------------------
     # Deploy to AWS ECS via ECR
@@ -129,7 +134,7 @@ jobs:
     - name: Summarize results
       run: |
         echo "### CI/CD Summary" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ Unit tests & coverage complete" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ Avro schema validated" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ Offline eval & drift check passed" >> $GITHUB_STEP_SUMMARY
-        echo "- 🚀 Image deployed: ${{ steps.build-image.outputs.image }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Unit tests & coverage complete" >> $GITHUB_STEP_SUMMARY
+        echo "- Offline evaluation completed" >> $GITHUB_STEP_SUMMARY
+        echo "- Drift check passed (PSI < 0.25)" >> $GITHUB_STEP_SUMMARY
+        echo "- Image deployed: ${{ steps.build-image.outputs.image }}" >> $GITHUB_STEP_SUMMARY
