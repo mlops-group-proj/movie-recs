@@ -38,6 +38,14 @@ jobs:
       run: echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
 
     - name: Run unit tests + coverage
+      env:
+        KAFKA_BOOTSTRAP: localhost:9092
+        KAFKA_API_KEY: fake_key
+        KAFKA_API_SECRET: fake_secret
+        KAFKA_TEAM: myteam
+        AWS_ACCESS_KEY_ID: fake_access_key
+        AWS_SECRET_ACCESS_KEY: fake_secret_key
+        AWS_REGION: us-east-2
       run: |
         mkdir -p reports
         pytest --maxfail=1 --disable-warnings \
