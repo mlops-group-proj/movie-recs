@@ -46,8 +46,14 @@ def hit_rate(preds: List[Sequence[int]], truth: List[Relevant], k: int = 10) -> 
     """
     HR@K: fraction of users with at least one relevant item in top-K.
     """
-    if not preds or not truth:
-        return 0.0
+    if (
+        preds is None or truth is None
+        or (hasattr(preds, "empty") and preds.empty)
+        or (hasattr(truth, "empty") and truth.empty)
+        or len(preds) == 0 or len(truth) == 0
+    ):
+        return 0.0  #  Always return a float, not a dict
+
     assert len(preds) == len(truth), "preds and truth must have the same length"
 
     hits, n = 0, len(preds)
@@ -59,12 +65,18 @@ def hit_rate(preds: List[Sequence[int]], truth: List[Relevant], k: int = 10) -> 
     return hits / n if n else 0.0
 
 
+
 def precision_at_k(preds: List[Sequence[int]], truth: List[Relevant], k: int = 10) -> float:
     """
     Precision@K: average |relevant ∩ topK| / K (per-user, then mean).
     If K > len(preds_row), denominator becomes len(preds_row).
     """
-    if not preds or not truth:
+    if (
+        preds is None or truth is None
+        or (hasattr(preds, "empty") and preds.empty)
+        or (hasattr(truth, "empty") and truth.empty)
+        or len(preds) == 0 or len(truth) == 0
+    ):
         return 0.0
     assert len(preds) == len(truth)
 
@@ -82,7 +94,12 @@ def recall_at_k(preds: List[Sequence[int]], truth: List[Relevant], k: int = 10) 
     Recall@K: average |relevant ∩ topK| / |relevant|.
     If a user has no relevant items, that user contributes 0.
     """
-    if not preds or not truth:
+    if (
+    preds is None or truth is None
+        or (hasattr(preds, "empty") and preds.empty)
+        or (hasattr(truth, "empty") and truth.empty)
+        or len(preds) == 0 or len(truth) == 0
+    ):
         return 0.0
     assert len(preds) == len(truth)
 
@@ -122,7 +139,12 @@ def ndcg(preds: List[Sequence[int]], truth: List[Relevant], k: int = 10, gains: 
     """
     nDCG@K with binary relevance.
     """
-    if not preds or not truth:
+    if (
+        preds is None or truth is None
+        or (hasattr(preds, "empty") and preds.empty)
+        or (hasattr(truth, "empty") and truth.empty)
+        or len(preds) == 0 or len(truth) == 0
+    ):
         return 0.0
     assert len(preds) == len(truth)
 
@@ -157,7 +179,12 @@ def map_at_k(preds: List[Sequence[int]], truth: List[Relevant], k: int = 10) -> 
     For each user, compute the average precision over the relevant hits in top-K.
     Users with no relevant items contribute 0.
     """
-    if not preds or not truth:
+    if (
+        preds is None or truth is None
+        or (hasattr(preds, "empty") and preds.empty)
+        or (hasattr(truth, "empty") and truth.empty)
+        or len(preds) == 0 or len(truth) == 0
+    ):
         return 0.0
     assert len(preds) == len(truth)
 
@@ -185,7 +212,12 @@ def mrr_at_k(preds: List[Sequence[int]], truth: List[Relevant], k: int = 10) -> 
     """
     Mean Reciprocal Rank@K.
     """
-    if not preds or not truth:
+    if (
+        preds is None or truth is None
+        or (hasattr(preds, "empty") and preds.empty)
+        or (hasattr(truth, "empty") and truth.empty)
+        or len(preds) == 0 or len(truth) == 0
+    ):
         return 0.0
     assert len(preds) == len(truth)
 

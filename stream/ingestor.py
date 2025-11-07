@@ -14,6 +14,7 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 from confluent_kafka import Consumer, KafkaException
 from pydantic import BaseModel, Field
+import threading
 
 # S3 imports (optional - only used if USE_S3=true)
 try:
@@ -66,6 +67,8 @@ class StreamIngestor:
         self.use_s3 = use_s3 or os.environ.get("USE_S3", "").lower() == "true"
         self.s3_bucket = s3_bucket or os.environ.get("S3_BUCKET")
         self.s3_prefix = s3_prefix or os.environ.get("S3_PREFIX", "snapshots")
+        self._running = False   # track lifecycle state
+
         
         # Initialize S3 client if needed
         if self.use_s3:
@@ -176,11 +179,27 @@ class StreamIngestor:
             print(f"Wrote {len(batch)} records to {output_path}")
 
     def _flush_batch(self, topic_type: str) -> None:
-        """Flush a batch of messages to storage."""
+        """Flush a batch of messages to Parquet storage."""
         batch = self.batches[topic_type]
-        if batch:
+        if not batch:
+            return
+
+        if getattr(self, "use_s3", False):
+            # Future: handle S3
             self._write_batch_to_parquet(topic_type, batch)
-            self.batches[topic_type] = []
+        else:
+            # Always create a Parquet file even for local runs
+            self._write_batch_to_parquet(topic_type, batch)
+            # Optional: also keep JSONL for inspection/debugging
+            self._write_local(topic_type)
+
+        self.batches[topic_type] = []
+
+    
+    def _flush_batches(self) -> None:
+        """Flush all topic batches to storage."""
+        for topic_type in list(self.batches.keys()):
+            self._flush_batch(topic_type)
 
     def run(self, timeout_sec: float = 1.0) -> None:
         """Main ingestion loop."""
@@ -228,6 +247,83 @@ class StreamIngestor:
             for topic_type in self.batches:
                 self._flush_batch(topic_type)
             self.consumer.close()
+    
+    def _write_local(self, topic: str) -> None:
+        """
+        Write the current batch for a topic to local storage as JSONL.
+        Called automatically when batch_size or flush_interval is reached.
+        """
+        if topic not in self.batches or not self.batches[topic]:
+            return  # nothing to write
+
+        # Ensure storage path exists
+        Path(self.storage_path).mkdir(parents=True, exist_ok=True)
+        file_path = Path(self.storage_path) / f"{topic}.jsonl"
+
+        # Custom serializer for datetime
+        def default_serializer(obj):
+            if isinstance(obj, datetime):
+                return obj.isoformat()
+            raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
+        # Write JSONL
+        with open(file_path, "a", encoding="utf-8") as f:
+            for msg in self.batches[topic]:
+                json.dump(msg, f, default=default_serializer)
+                f.write("\n")
+
+        # Clear the batch after writing
+        self.batches[topic] = []
+
+        print(f"[Ingestor] Wrote local batch for '{topic}' → {file_path}")
+        
+    def _consume_forever(self) -> None:
+        """
+        Placeholder for continuous Kafka consumption loop.
+        In production this would run until stopped.
+        """
+        print("[Ingestor] _consume_forever() called (mocked in tests)")
+        while getattr(self, "_running", False):
+            pass
+
+    
+    def start(self):
+        """
+        Start the ingestion process in a background thread.
+        """
+        print("[Ingestor] start() called → beginning message consumption")
+        self._running = True
+
+        # Launch background thread for _consume_forever
+        self._thread = threading.Thread(target=self._consume_forever, daemon=True)
+        self._thread.start()
+
+    def stop(self):
+        """
+        Stop the ingestion process gracefully.
+        """
+        print("[Ingestor] stop() called → shutting down consumer")
+        self._running = False
+
+        # Join thread if it exists
+        if hasattr(self, "_thread") and self._thread.is_alive():
+            self._thread.join(timeout=2)
+
+    
+    def is_running(self) -> bool:
+        """Return True if the ingestor has been started and not stopped."""
+        return getattr(self, "_running", False)
+
+    def flush_and_stop(self) -> None:
+        """
+        Immediately flush all topic batches and stop ingestion.
+        Used in unit tests to avoid long loops.
+        """
+        print("[Ingestor] flush_and_stop() called")
+        self._flush_batches()
+        self.stop()
+
+
 
 def main():
     """Entry point for running the ingestor."""
