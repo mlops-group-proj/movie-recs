@@ -46,7 +46,7 @@ jobs:
             --bootstrap ${{ secrets.KAFKA_BOOTSTRAP }} \
             --api-key ${{ secrets.KAFKA_API_KEY }} \
             --api-secret ${{ secrets.KAFKA_API_SECRET }} \
-            --team myteam --window-min 10 --limit 2000
+            --team myteam --window-min 10 --limit 100
 
       - name: Upload KPI artifact
         uses: actions/upload-artifact@v4

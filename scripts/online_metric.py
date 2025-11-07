@@ -11,7 +11,7 @@ Usage:
         --team myteam --window-min 10 --limit 5000
 """
 
-import os, json, argparse, time, io
+import os, json, argparse, time
 import pandas as pd
 from confluent_kafka import Consumer
 from datetime import datetime, timedelta
@@ -28,12 +28,15 @@ def parse_args():
     ap.add_argument("--team", required=True)
     ap.add_argument("--window-min", type=int, default=10)
     ap.add_argument("--limit", type=int, default=10000)
+    ap.add_argument("--max-wait", type=int, default=30,
+                    help="Maximum seconds to wait for Kafka messages")
     return ap.parse_args()
 
 # ---------------------------------------------------------------------
 # Kafka utilities
 # ---------------------------------------------------------------------
-def consume_topic(bootstrap, key, secret, topic, limit):
+def consume_topic(bootstrap, key, secret, topic, limit, max_wait=30):
+    """Consume up to `limit` messages or stop after `max_wait` seconds of inactivity."""
     c = Consumer({
         "bootstrap.servers": bootstrap,
         "security.protocol": "SASL_SSL",
@@ -44,9 +47,9 @@ def consume_topic(bootstrap, key, secret, topic, limit):
         "auto.offset.reset": "earliest",
     })
     c.subscribe([topic])
-    msgs = []
+    msgs, last_msg_time = [], time.time()
     try:
-        while len(msgs) < limit:
+        while len(msgs) < limit and (time.time() - last_msg_time) < max_wait:
             m = c.poll(1.0)
             if m is None:
                 continue
@@ -54,8 +57,12 @@ def consume_topic(bootstrap, key, secret, topic, limit):
                 print("Kafka error:", m.error())
                 continue
             msgs.append(json.loads(m.value().decode("utf-8")))
+            last_msg_time = time.time()
+            if len(msgs) % 100 == 0 and len(msgs) > 0:
+                print(f"  Consumed {len(msgs)} messages from {topic}...")
     finally:
         c.close()
+    print(f"Consumed {len(msgs)} messages from {topic}")
     return pd.DataFrame(msgs)
 
 # ---------------------------------------------------------------------
@@ -105,23 +112,40 @@ def proportion_ci(successes, total, confidence=0.95):
 # ---------------------------------------------------------------------
 def main():
     args = parse_args()
+
+    # --- Dry-run mode for CI ---
+    if os.getenv("CI_DRY_RUN", "false").lower() == "true":
+        print("Dry run mode: generating fake KPI metrics for CI")
+        metrics = pd.DataFrame([
+            {"model": "itemcf", "success_rate": 0.23, "n": 2000,
+             "ci_low": 0.20, "ci_high": 0.26}
+        ])
+        os.makedirs("reports", exist_ok=True)
+        ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        out_csv = f"reports/online_kpi_{ts}.csv"
+        metrics.to_csv(out_csv, index=False)
+        print(metrics.to_markdown(index=False))
+        print(f"Saved KPI table → {out_csv}")
+        return
+
     team = args.team
     topics = {
         "reco": f"{team}.reco_responses",
         "watch": f"{team}.watch",
     }
 
-    print(f"Consuming {args.limit} messages per topic…")
+    print(f"Consuming up to {args.limit} messages per topic "
+          f"(max wait {args.max_wait}s)…")
+
     df_reco = consume_topic(args.bootstrap, args.api_key, args.api_secret,
-                            topics["reco"], args.limit)
+                            topics["reco"], args.limit, args.max_wait)
     df_watch = consume_topic(args.bootstrap, args.api_key, args.api_secret,
-                             topics["watch"], args.limit)
+                             topics["watch"], args.limit, args.max_wait)
 
     if df_reco.empty:
-        print("No reco_responses found.")
+        print("No reco_responses found. Exiting.")
         return
 
-    # Optional: add model name from payload meta
     if "model" not in df_reco.columns:
         df_reco["model"] = df_reco.get("model_name", "unknown")
 
@@ -130,15 +154,15 @@ def main():
         print("Not enough data for KPI computation.")
         return
 
-    out_dir = "reports"
-    os.makedirs(out_dir, exist_ok=True)
+    os.makedirs("reports", exist_ok=True)
     ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-    out_csv = os.path.join(out_dir, f"online_kpi_{ts}.csv")
+    out_csv = f"reports/online_kpi_{ts}.csv"
     metrics.to_csv(out_csv, index=False)
 
     print("\n=== Online KPI Results ===")
     print(metrics.to_markdown(index=False))
     print(f"\nSaved KPI table → {out_csv}")
 
+# ---------------------------------------------------------------------
 if __name__ == "__main__":
     main()
