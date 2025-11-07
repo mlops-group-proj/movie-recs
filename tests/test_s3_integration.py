@@ -3,7 +3,8 @@ Test script to verify S3 integration for parquet file writing.
 """
 import os
 import sys
-from datetime import datetime, UTC
+from datetime import datetime, timezone
+UTC = timezone.utc
 from pathlib import Path
 
 # Ensure local imports work

@@ -15,6 +15,13 @@ import json
 import tempfile
 import shutil
 
+try:
+    from datetime import UTC  # Python 3.11+
+except ImportError:
+    from datetime import timezone
+    UTC = timezone.utc
+
+
 # Ensure local imports work
 project_root = str(Path(__file__).parent.parent.absolute())
 if project_root not in sys.path:
