@@ -101,7 +101,7 @@ jobs:
       run: |
         # -- Capture variables explicitly inside the shell --
         ECR_REGISTRY="${{ steps.ecr-login.outputs.registry }}"
-        ECR_REPOSITORY="${{ secrets.ECR_REPOSITORY }}"
+        ECR_REPOSITORY=movie-recs
         IMAGE_TAG="v${{ github.run_number }}"
 
         echo "🛠️ Building image for: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
