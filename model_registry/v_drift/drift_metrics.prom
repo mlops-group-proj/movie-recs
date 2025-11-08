@@ -1,0 +1,16 @@
+# HELP data_drift_psi Population Stability Index
+# TYPE data_drift_psi gauge
+data_drift_psi{feature="user"} 0.005482965816074501
+data_drift_psi{feature="item"} 0.07622101454535507
+# HELP data_drift_kl Kullback-Leibler Divergence
+# TYPE data_drift_kl gauge
+data_drift_kl{feature="user"} 0.49094649982751287
+data_drift_kl{feature="item"} 2.4302978586759387
+# HELP data_missing_ratio Fraction of missing values
+# TYPE data_missing_ratio gauge
+data_missing_ratio{feature="user"} 0.0
+data_missing_ratio{feature="item"} 0.0
+# HELP data_outlier_fraction Fraction of outliers (z>3)
+# TYPE data_outlier_fraction gauge
+data_outlier_fraction{feature="user"} 0.0
+data_outlier_fraction{feature="item"} 0.0
