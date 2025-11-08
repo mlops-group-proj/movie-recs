@@ -1,4 +1,4 @@
-# 📊 Model Comparison Summary
+# Model Comparison Summary
 
 This table combines model accuracy, training cost, and inference latency.
 

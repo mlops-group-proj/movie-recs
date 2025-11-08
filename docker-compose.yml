@@ -1,0 +1,48 @@
+version: '3.8'
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/recommender.Dockerfile
+    container_name: movie-recommender
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./service:/app/service:ro
+      - ./recommender:/app/recommender:ro
+      - ./data:/app/data
+      - ./model_registry/v_drift:/app/model_registry/v_drift
+    environment:
+      - MODEL_NAME=ncf
+      - MODEL_VERSION=v_ncf
+    command: uvicorn service.app:app --host 0.0.0.0 --port 8080
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    restart: always
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+    volumes:
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+    restart: always
+
+networks:
+  default:
+    name: movie-net

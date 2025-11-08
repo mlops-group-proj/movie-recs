@@ -5,18 +5,22 @@
     "user": {
       "kl_divergence": 0.49094649982751287,
       "wasserstein": 0.0001327833653248971,
-      "n_train": 994169,
-      "n_test": 6040
+      "psi": 0.005482965816074501,
+      "missing_ratio": 0.0,
+      "outlier_fraction": 0.0
     },
     "item": {
       "kl_divergence": 2.4302978586759387,
-      "wasserstein": 6.0758679991736994e-05,
-      "n_train": 994169,
-      "n_test": 6040
+      "wasserstein": 6.075867999173699e-05,
+      "psi": 0.07622101454535507,
+      "missing_ratio": 0.0,
+      "outlier_fraction": 0.0
     }
   },
   "aggregate": {
     "avg_kl": 1.4606221792517258,
-    "avg_wasserstein": 9.677102265831705e-05
+    "avg_psi": 0.04085199018071479,
+    "avg_missing": 0.0,
+    "avg_outliers": 0.0
   }
 }
