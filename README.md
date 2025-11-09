@@ -57,9 +57,9 @@ flowchart LR
 
 | Milestone | Focus | Key Deliverables | Status |
 |:-----------|:------|:-----------------|:-------:|
-| **1** | Team Formation & Proposal | Contract, architecture diagram, CI/CD plan 
-| **2** | Kafka Wiring & Baselines | Kafka topics verified, baseline models trained (ItemCF, ALS), first cloud deploy 
-| **3** | Evaluation & Quality Gates | Offline + online metrics, schema & drift checks, CI/CD pipeline 
+| **1** | Team Formation & Proposal | Contract, architecture diagram, CI/CD plan | Done |
+| **2** | Kafka Wiring & Baselines | Kafka topics verified, baseline models trained (ItemCF, ALS), first cloud deploy | Done |
+| **3** | Evaluation & Quality Gates | Offline + online metrics, schema & drift checks, CI/CD pipeline | Done |
 | **4** | Monitoring & Retraining | Dashboards, alerts, automated model updates, A/B tests | In Progress |
 | **5** | Fairness & Security | Bias metrics, feedback loop detection, threat model + final demo | Coming Soon |
 
@@ -67,12 +67,12 @@ flowchart LR
 
 ## Offline Evaluation (Milestone 3)
 
-| model      |   k |      HR@K |    NDCG@K |   train_seconds |   model_size_MB |      p50_ms |      p95_ms |
-|:-----------|----:|----------:|----------:|----------------:|----------------:|------------:|------------:|
-| ncf        |  10 | 0.137252  | 0.0668516 |       376.469   |            5.28 | 0.035541    | 0.0494473   |
-| als        |  10 | 0.0988411 | 0.0489501 |         3.08029 |            2.58 | 0.0635835   | 0.0735861   |
-| itemcf     |  10 | 0.0753311 | 0.0401158 |         6.23108 |           90.52 | 0.021458    | 0.0284191   |
-| popularity |  10 | 0.0437086 | 0.0223218 |         1.11825 |            0.01 | 8.30041e-05 | 0.000125001 |
+| model      |   k |      HR@K |    NDCG@K |   train_seconds |   size_MB |      p50_ms |      p95_ms |
+|:-----------|----:|----------:|----------:|----------------:|----------:|------------:|------------:|
+| ncf        |  10 | 0.137252  | 0.0668516 |       376.469   |      5.28 | 0.035541    | 0.0494473   |
+| als        |  10 | 0.0988411 | 0.0489501 |         3.08029 |      2.58 | 0.0635835   | 0.0735861   |
+| itemcf     |  10 | 0.0753311 | 0.0401158 |         6.23108 |     90.52 | 0.021458    | 0.0284191   |
+| popularity |  10 | 0.0437086 | 0.0223218 |         1.11825 |      0.01 | 8.30041e-05 | 0.000125001 |
 
 ---
 
@@ -92,8 +92,9 @@ flowchart LR
 3. **Test Endpoints**
    ```bash
    curl http://localhost:8080/healthz
-   curl http://localhost:8080/recommend/42?k=10&model=itemcf
+   curl http://localhost:8080/recommend/42?k=10&model=ncf
    curl http://localhost:8080/metrics
+   Deployed to AWS ECS Fargate at: http://movie-recs-alb-782825466.us-east-2.elb.amazonaws.com:8080
    ```
 
 4. **Probe**
