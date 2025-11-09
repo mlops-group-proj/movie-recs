@@ -1,4 +1,4 @@
-# 🎬 Movie Recommender System — Team *MedicalAI*
+# Movie Recommender System — Team *MedicalAI*
 
 <!-- CI/CD & Coverage Badges -->
 [![Probes](https://github.com/mlops-group-proj/movie-recs/actions/workflows/probes.yml/badge.svg)](https://github.com/mlops-group-proj/movie-recs/actions/workflows/probes.yml)
