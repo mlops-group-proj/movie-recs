@@ -1,3 +1,5 @@
+# Milestone 4: Containerized Application with Monitoring
+# Docker Compose configuration for the movie recommender system with Prometheus and Grafana
 version: '3.8'
 services:
   api:
