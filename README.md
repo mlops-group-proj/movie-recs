@@ -94,8 +94,9 @@ flowchart LR
    curl http://localhost:8080/healthz
    curl http://localhost:8080/recommend/42?k=10&model=ncf
    curl http://localhost:8080/metrics
-   Deployed to AWS ECS Fargate at: http://movie-recs-alb-782825466.us-east-2.elb.amazonaws.com:8080
    ```
+   Deployed to AWS ECS Fargate at: http://movie-recs-alb-782825466.us-east-2.elb.amazonaws.com:8080
+   
 
 4. **Probe**
    ```bash
