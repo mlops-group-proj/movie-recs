@@ -53,7 +53,7 @@ def produce(topic: str, value: dict):
 # Core probe logic
 # ---------------------------------------------------------------------
 def run_probe_once():
-    """Perform one probe iteration (used by main and tests)."""
+    # Perform one probe iteration (used by main and tests).
     user = random.randint(1, 1000)
     start = time.time()
 
@@ -62,15 +62,15 @@ def run_probe_once():
 
     try:
         # --- Real probe (uncomment for production) ---
-        # r = requests.get(f"{API}/recommend/{user}", timeout=5)
-        # latency = int((time.time() - start) * 1000)
-        # status = r.status_code
-        # movie_ids = [int(x) for x in r.text.split(",") if x.strip().isdigit()]
+        r = requests.get(f"{API}/recommend/{user}", timeout=5)
+        latency = int((time.time() - start) * 1000)
+        status = r.status_code
+        movie_ids = [int(x) for x in r.text.split(",") if x.strip().isdigit()]
 
         # --- Simulated probe (used in tests) ---
-        latency = random.randint(50, 300)
-        status = 200
-        movie_ids = [random.randint(1, 1000) for _ in range(5)]
+        # latency = random.randint(50, 300)
+        # status = 200
+        # movie_ids = [random.randint(1, 1000) for _ in range(5)]
 
         data = {
             "ts": int(time.time() * 1000),
@@ -82,7 +82,7 @@ def run_probe_once():
         }
 
         produce(RECO_RES, data)
-        print("simulated probe ok", data)
+        print("probe ok", data)
         return data
 
     except Exception as e:
@@ -94,7 +94,7 @@ def run_probe_once():
 # CLI Entrypoints
 # ---------------------------------------------------------------------
 def main(loop: bool = True, count: int = 5):
-    """Run probe once or repeatedly (used for cron)."""
+    # Run probe once or repeatedly (used for cron).
     if loop:
         for _ in range(count):
             run_probe_once()
@@ -105,7 +105,7 @@ def main(loop: bool = True, count: int = 5):
 
 
 def main_once():
-    """Run exactly one iteration (for tests)."""
+    # Run exactly one iteration (for tests).
     return run_probe_once()
 
 
