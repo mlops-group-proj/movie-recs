@@ -1,0 +1,182 @@
+groups:
+  - name: movie_recommender_slo
+    interval: 30s
+    rules:
+      # ========================================
+      # Latency SLO Alerts
+      # ========================================
+      - alert: HighLatencyP95
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(recommend_latency_seconds_bucket{endpoint="recommend"}[5m])) by (le)
+          ) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          component: api
+          slo: latency
+        annotations:
+          summary: "P95 latency above SLO target"
+          description: "P95 latency is {{ $value | humanizeDuration }} (threshold: 100ms)"
+          runbook_url: "https://github.com/mlops-group-proj/movie-recs/blob/main/docs/RUNBOOK.md#high-latency"
+
+      - alert: HighLatencyP99
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(recommend_latency_seconds_bucket{endpoint="recommend"}[5m])) by (le)
+          ) > 0.5
+        for: 2m
+        labels:
+          severity: critical
+          component: api
+          slo: latency
+        annotations:
+          summary: "P99 latency critically high"
+          description: "P99 latency is {{ $value | humanizeDuration }} (threshold: 500ms)"
+          runbook_url: "https://github.com/mlops-group-proj/movie-recs/blob/main/docs/RUNBOOK.md#high-latency"
+
+      # ========================================
+      # Error Rate SLO Alerts
+      # ========================================
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(recommend_requests_total{status=~"5.."}[5m]))
+            /
+            sum(rate(recommend_requests_total[5m]))
+          ) > 0.01
+        for: 2m
+        labels:
+          severity: warning
+          component: api
+          slo: availability
+        annotations:
+          summary: "Error rate above 1%"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 1%)"
+          runbook_url: "https://github.com/mlops-group-proj/movie-recs/blob/main/docs/RUNBOOK.md#high-error-rate"
+
+      - alert: CriticalErrorRate
+        expr: |
+          (
+            sum(rate(recommend_requests_total{status=~"5.."}[5m]))
+            /
+            sum(rate(recommend_requests_total[5m]))
+          ) > 0.05
+        for: 1m
+        labels:
+          severity: critical
+          component: api
+          slo: availability
+        annotations:
+          summary: "Error rate critically high (>5%)"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+          runbook_url: "https://github.com/mlops-group-proj/movie-recs/blob/main/docs/RUNBOOK.md#high-error-rate"
+
+      # ========================================
+      # Availability SLO Alerts
+      # ========================================
+      - alert: ServiceDown
+        expr: up{job="movie-recommender"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: api
+          slo: availability
+        annotations:
+          summary: "Movie Recommender service is down"
+          description: "The service has been unreachable for {{ $value | humanizeDuration }}"
+          runbook_url: "https://github.com/mlops-group-proj/movie-recs/blob/main/docs/RUNBOOK.md#service-down"
+
+      - alert: ServiceUnhealthy
+        expr: service_health_status == 0
+        for: 2m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "Service health check failing"
+          description: "Service health status is unhealthy"
+          runbook_url: "https://github.com/mlops-group-proj/movie-recs/blob/main/docs/RUNBOOK.md#service-unhealthy"
+
+      - alert: LowAvailability
+        expr: |
+          (
+            sum(rate(recommend_requests_total{status=~"2.."}[30m]))
+            /
+            sum(rate(recommend_requests_total[30m]))
+          ) < 0.999
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+          slo: availability
+        annotations:
+          summary: "Availability below 99.9% SLO"
+          description: "30-minute availability is {{ $value | humanizePercentage }} (target: 99.9%)"
+          runbook_url: "https://github.com/mlops-group-proj/movie-recs/blob/main/docs/RUNBOOK.md#low-availability"
+
+      # ========================================
+      # Model Performance Alerts
+      # ========================================
+      - alert: ModelLoadFailure
+        expr: increase(recommend_errors_total{error_type="internal_error"}[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          component: model
+        annotations:
+          summary: "High rate of model errors"
+          description: "{{ $value }} model errors in the last 5 minutes"
+          runbook_url: "https://github.com/mlops-group-proj/movie-recs/blob/main/docs/RUNBOOK.md#model-errors"
+
+      - alert: HighInvalidModelRequests
+        expr: increase(recommend_errors_total{error_type="invalid_model"}[10m]) > 50
+        for: 5m
+        labels:
+          severity: info
+          component: api
+        annotations:
+          summary: "Many requests for invalid model"
+          description: "{{ $value }} invalid model requests in last 10 minutes"
+          runbook_url: "https://github.com/mlops-group-proj/movie-recs/blob/main/docs/RUNBOOK.md#invalid-model"
+
+      # ========================================
+      # Resource Alerts
+      # ========================================
+      - alert: HighMemoryUsage
+        expr: |
+          (process_resident_memory_bytes / 1024 / 1024 / 1024) > 1.5
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value | humanize }}GB (threshold: 1.5GB)"
+          runbook_url: "https://github.com/mlops-group-proj/movie-recs/blob/main/docs/RUNBOOK.md#high-memory"
+
+      - alert: NoRequests
+        expr: |
+          rate(recommend_requests_total[5m]) == 0
+        for: 10m
+        labels:
+          severity: info
+          component: api
+        annotations:
+          summary: "No requests received"
+          description: "No requests in the last 10 minutes - possible upstream issue"
+          runbook_url: "https://github.com/mlops-group-proj/movie-recs/blob/main/docs/RUNBOOK.md#no-requests"
+
+      # ========================================
+      # Data Drift Alerts
+      # ========================================
+      - alert: HighDataDrift
+        expr: data_drift_psi > 0.2
+        for: 5m
+        labels:
+          severity: warning
+          component: model
+        annotations:
+          summary: "High data drift detected"
+          description: "PSI score is {{ $value }} for feature {{ $labels.feature }} (threshold: 0.2)"
+          runbook_url: "https://github.com/mlops-group-proj/movie-recs/blob/main/docs/RUNBOOK.md#data-drift"

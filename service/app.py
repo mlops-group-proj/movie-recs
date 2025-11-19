@@ -14,12 +14,40 @@ app = FastAPI(title="Movie Recommender API")
 logging.basicConfig(level=logging.INFO)
 
 # ------------------------------------------------------------------
-# Prometheus base metrics
+# Prometheus SLO metrics
 # ------------------------------------------------------------------
-REQS = Counter("recommend_requests_total", "Requests", ["status"])
-LAT = Histogram("recommend_latency_seconds", "Latency")
+# Request counters by status code
+REQS = Counter("recommend_requests_total", "Total recommendation requests", ["status", "endpoint"])
+
+# Latency histogram with SLO-friendly buckets (in seconds)
+# Buckets: 10ms, 25ms, 50ms, 100ms, 250ms, 500ms, 1s, 2.5s, 5s, 10s
+LAT = Histogram(
+    "recommend_latency_seconds",
+    "Request latency in seconds",
+    ["endpoint"],
+    buckets=(0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0)
+)
+
+# Error rate metrics
+ERRORS = Counter("recommend_errors_total", "Total errors by type", ["error_type", "endpoint"])
+
+# Service uptime and health
+UPTIME = Gauge("service_uptime_seconds", "Service uptime in seconds")
+HEALTH_STATUS = Gauge("service_health_status", "Service health status (1=healthy, 0=unhealthy)")
+
+# Model-specific metrics
 MODEL_VERSION_INFO = Gauge("model_version_info", "Current model version", ["model_name", "version", "git_sha", "data_snapshot"])
 MODEL_SWITCHES = Counter("model_switches_total", "Model hot-swap operations", ["from_version", "to_version", "status"])
+MODEL_LOAD_TIME = Histogram("model_load_seconds", "Model loading time", buckets=(0.1, 0.5, 1.0, 2.0, 5.0, 10.0))
+
+# SLO indicators
+SLO_LATENCY_TARGET = Gauge("slo_latency_target_seconds", "SLO latency target in seconds")
+SLO_AVAILABILITY_TARGET = Gauge("slo_availability_target_ratio", "SLO availability target (0-1)")
+SLO_ERROR_BUDGET = Gauge("slo_error_budget_remaining_ratio", "SLO error budget remaining (0-1)")
+
+# Set SLO targets
+SLO_LATENCY_TARGET.set(0.1)  # 100ms p95 target
+SLO_AVAILABILITY_TARGET.set(0.999)  # 99.9% availability target
 
 MODEL_NAME = os.getenv("MODEL_NAME", "als")
 MODEL_VERSION = os.getenv("MODEL_VERSION", "v0.3")
@@ -48,9 +76,17 @@ OUTL_G = _get_or_create("data_outlier_fraction", "Fraction of outliers (z>3)")
 # Cache drift results
 app.state.drift_results = None
 
+import time
+
+# Track service start time
+SERVICE_START_TIME = time.time()
+
 @app.on_event("startup")
 def compute_drift_once():
     """Compute drift once at startup."""
+    # Mark service as healthy
+    HEALTH_STATUS.set(1)
+
     logging.info("📊 Running drift check on startup...")
     try:
         results, _, _ = drift.run_drift(threshold=0.25)
@@ -94,18 +130,36 @@ def healthz():
 
 
 @app.get("/recommend/{user_id}")
-@LAT.time()
 def recommend(user_id: int, k: int = 20, model: str | None = None):
     """Return top-K recommendations for a user."""
+    start_time = time.time()
+    endpoint = "recommend"
+
     try:
         model_to_use = model or MODEL_NAME
         if model_to_use != MODEL_NAME:
+            REQS.labels(status="400", endpoint=endpoint).inc()
+            ERRORS.labels(error_type="invalid_model", endpoint=endpoint).inc()
             raise HTTPException(status_code=400, detail="Only ALS model supported")
+
         items = app.state.model_manager.recommend(user_id, k)
-        REQS.labels("200").inc()
+
+        # Record success metrics
+        latency = time.time() - start_time
+        LAT.labels(endpoint=endpoint).observe(latency)
+        REQS.labels(status="200", endpoint=endpoint).inc()
+
         return {"user_id": user_id, "model": model_to_use, "items": items}
+
+    except HTTPException:
+        raise
     except Exception as e:
-        REQS.labels("500").inc()
+        # Record error metrics
+        latency = time.time() - start_time
+        LAT.labels(endpoint=endpoint).observe(latency)
+        REQS.labels(status="500", endpoint=endpoint).inc()
+        ERRORS.labels(error_type="internal_error", endpoint=endpoint).inc()
+        logging.exception(f"Recommendation error for user {user_id}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -113,6 +167,10 @@ def recommend(user_id: int, k: int = 20, model: str | None = None):
 def metrics():
     """Prometheus metrics endpoint."""
     try:
+        # Update uptime metric
+        uptime = time.time() - SERVICE_START_TIME
+        UPTIME.set(uptime)
+
         # Drift already preloaded at startup — no recomputation
         return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
     except Exception as e:
