@@ -81,6 +81,12 @@ class ModelManager:
             break
 
         meta.setdefault("version", {"version": version})
+
+        # Enrich with container image digest from environment if available
+        # This can be set during Docker build or deployment
+        container_digest = os.getenv("CONTAINER_IMAGE_DIGEST", meta["version"].get("image_digest", ""))
+        meta["version"]["image_digest"] = container_digest
+
         return meta
 
     def _activate(self, model_name: str, version: str) -> None:
