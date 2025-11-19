@@ -1,5 +1,5 @@
 # service/app.py
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException, Response, Request
 from prometheus_client import (
     Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST, REGISTRY
 )
@@ -9,9 +9,13 @@ import logging
 from recommender import drift
 from service.loader import ModelManager, ModelRegistryError
 from service.rollout import RolloutConfig
+from service.middleware import RequestIDMiddleware, get_request_id, store_trace, get_trace
 
 app = FastAPI(title="Movie Recommender API")
 logging.basicConfig(level=logging.INFO)
+
+# Add request ID middleware
+app.add_middleware(RequestIDMiddleware)
 
 # ------------------------------------------------------------------
 # Prometheus SLO metrics
@@ -134,12 +138,15 @@ def healthz():
 
 
 @app.get("/recommend/{user_id}")
-def recommend(user_id: int, k: int = 20, model: str | None = None):
+def recommend(user_id: int, k: int = 20, model: str | None = None, request: Request = None):
     """Return top-K recommendations for a user with A/B routing support."""
     start_time = time.time()
     endpoint = "recommend"
 
     try:
+        # Get request ID from middleware
+        request_id = get_request_id() or "unknown"
+
         # Select version based on rollout strategy (e.g., A/B test)
         selected_version = app.state.rollout_config.select_version(user_id)
 
@@ -173,11 +180,54 @@ def recommend(user_id: int, k: int = 20, model: str | None = None):
             AB_REQUESTS.labels(variant=variant, status="200").inc()
             AB_LATENCY.labels(variant=variant).observe(latency)
 
+        # Get provenance metadata
+        meta = app.state.model_manager.describe_active().get("meta", {})
+        version_meta = meta.get("version", {})
+
+        # Build provenance fields
+        provenance = {
+            "request_id": request_id,
+            "timestamp": int(start_time * 1000),  # milliseconds since epoch
+            "model_name": MODEL_NAME,
+            "model_version": model_to_use,
+            "git_sha": version_meta.get("git_sha", "unknown"),
+            "data_snapshot_id": version_meta.get("data_snapshot_id", "unknown"),
+            "container_image_digest": version_meta.get("image_digest", None),
+            "latency_ms": int(latency * 1000)
+        }
+
+        # Structured logging with provenance context
+        logging.info(
+            f"[{request_id}] Recommendation success for user {user_id}",
+            extra={
+                **provenance,
+                "user_id": user_id,
+                "k": k,
+                "num_items": len(items),
+                "status": 200,
+                "variant": variant
+            }
+        )
+
+        # Store trace for retrieval via /trace endpoint
+        store_trace(request_id, {
+            **provenance,
+            "user_id": user_id,
+            "k": k,
+            "num_items": len(items),
+            "status": 200,
+            "variant": variant,
+            "path": "/recommend/{user_id}",
+            "method": "GET"
+        })
+
         return {
             "user_id": user_id,
             "model": model_to_use,
             "items": items,
-            "variant": variant  # Include variant for transparency
+            "variant": variant,  # Include variant for transparency
+            # Provenance fields
+            "provenance": provenance
         }
 
     except HTTPException:
@@ -194,8 +244,54 @@ def recommend(user_id: int, k: int = 20, model: str | None = None):
             AB_REQUESTS.labels(variant=variant, status="500").inc()
             AB_LATENCY.labels(variant=variant).observe(latency)
 
-        logging.exception(f"Recommendation error for user {user_id}")
+        # Structured error logging with provenance context
+        request_id = get_request_id() or "unknown"
+        meta = app.state.model_manager.describe_active().get("meta", {})
+        version_meta = meta.get("version", {})
+
+        logging.exception(
+            f"[{request_id}] Recommendation error for user {user_id}",
+            extra={
+                "request_id": request_id,
+                "user_id": user_id,
+                "model_version": app.state.model_manager.current_version,
+                "git_sha": version_meta.get("git_sha", "unknown"),
+                "data_snapshot_id": version_meta.get("data_snapshot_id", "unknown"),
+                "status": 500,
+                "latency_ms": int(latency * 1000),
+                "error_type": type(e).__name__,
+                "variant": variant
+            }
+        )
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/trace/{request_id}")
+def trace(request_id: str):
+    """Retrieve provenance trace for a specific request.
+
+    Args:
+        request_id: The unique request identifier (from X-Request-ID header or response)
+
+    Returns:
+        Complete provenance trace including all metadata for the request
+
+    Example:
+        curl http://localhost:8080/trace/123e4567-e89b-12d3-a456-426614174000
+    """
+    trace_data = get_trace(request_id)
+
+    if not trace_data:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Trace not found for request_id={request_id}. "
+                   "Traces are kept for the last 1000 requests only."
+        )
+
+    return {
+        "request_id": request_id,
+        "trace": trace_data
+    }
 
 
 @app.get("/metrics")
