@@ -1,24 +1,72 @@
-# Milestone 4: Containerized Application with Monitoring
-# Docker Compose configuration for the movie recommender system with Prometheus and Grafana
 version: '3.8'
+
 services:
+
+  # --------------------------
+  # API (Recommender Service)
+  # --------------------------
   api:
     build:
       context: .
       dockerfile: docker/recommender.Dockerfile
     container_name: movie-recommender
+    restart: always
     ports:
       - "8080:8080"
+    environment:
+      MODEL_REGISTRY: /models
+      MODEL_NAME: ncf
+      MODEL_VERSION: v_ncf
     volumes:
       - ./service:/app/service:ro
       - ./recommender:/app/recommender:ro
-      - ./data:/app/data
-      - ./model_registry/v_drift:/app/model_registry/v_drift
-    environment:
-      - MODEL_NAME=ncf
-      - MODEL_VERSION=v_ncf
+      - ./model_registry:/models:ro
     command: uvicorn service.app:app --host 0.0.0.0 --port 8080
 
+
+  # --------------------------
+  # Ingestor (Kafka Consumer)
+  # --------------------------
+  ingestor:
+    build:
+      context: .
+      dockerfile: docker/ingestor.Dockerfile
+    container_name: movie-ingestor
+    restart: always
+    environment:
+      KAFKA_BOOTSTRAP: ${KAFKA_BOOTSTRAP}
+      KAFKA_API_KEY: ${KAFKA_API_KEY}
+      KAFKA_API_SECRET: ${KAFKA_API_SECRET}
+      USE_S3: "false"
+      S3_BUCKET: ""
+      MODEL_REGISTRY: /models
+    volumes:
+      - ./stream:/app/stream:ro
+      - ./data:/app/data
+      - ./model_registry:/models
+
+
+  # --------------------------
+  # Trainer (Manual / Scheduled Job)
+  # --------------------------
+  trainer:
+    build:
+      context: .
+      dockerfile: docker/trainer.Dockerfile
+    container_name: movie-trainer
+    entrypoint: ["python", "-m", "recommender.train"]
+    environment:
+      MODEL_REGISTRY: /models
+    volumes:
+      - ./recommender:/app/recommender:ro
+      - ./data:/app/data
+      - ./model_registry:/models
+    # NOTE: trainer intentionally does NOT autostart.
+
+
+  # --------------------------
+  # Prometheus
+  # --------------------------
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -30,20 +78,25 @@ services:
       - "--config.file=/etc/prometheus/prometheus.yml"
     restart: always
 
+
+  # --------------------------
+  # Grafana
+  # --------------------------
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
     ports:
       - "3000:3000"
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
     depends_on:
       - prometheus
     volumes:
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
       - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
     restart: always
+
 
 networks:
   default:
