@@ -17,6 +17,39 @@ from scipy.sparse import csr_matrix, save_npz
 from implicit.als import AlternatingLeastSquares
 
 
+COLUMN_ALIASES = {
+    "user_id": ["userId", "userid", "userID"],
+    "item_id": ["itemId", "itemid", "itemID", "movieId", "movie_id", "movieID", "movieid"],
+}
+
+
+def _normalize_col_key(name: str) -> str:
+    """Lowercase column name and drop non-alphanumeric chars for fuzzy matching."""
+    return "".join(ch for ch in name.lower() if ch.isalnum())
+
+
+def ensure_column(df: pd.DataFrame, target_name: str) -> pd.DataFrame:
+    """
+    Ensure the requested column exists.
+    If a case/format variant exists (e.g., userId vs user_id), rename it lazily.
+    """
+    if target_name in df.columns:
+        return df
+
+    for alias in COLUMN_ALIASES.get(target_name, []):
+        if alias in df.columns:
+            print(f"[INFO] Renaming column '{alias}' -> '{target_name}' for compatibility.")
+            return df.rename(columns={alias: target_name})
+
+    target_key = _normalize_col_key(target_name)
+    for col in df.columns:
+        if _normalize_col_key(col) == target_key:
+            print(f"[INFO] Renaming column '{col}' -> '{target_name}' for compatibility.")
+            return df.rename(columns={col: target_name})
+
+    raise KeyError(f"Column '{target_name}' not found in DataFrame columns: {list(df.columns)}")
+
+
 # ---------- helpers: mapping, matrix, split ----------
 def build_uid_iid_maps(df: pd.DataFrame, user_col: str, item_col: str):
     """
@@ -145,6 +178,11 @@ def main():
 
     # 1) Load data + split
     df = pd.read_csv(args.ratings_csv)
+
+    # Normalize column names so downstream code can rely on args.user_col/item_col/weight_col
+    for col in filter(None, [args.user_col, args.item_col, args.weight_col]):
+        df = ensure_column(df, col)
+
     train_df, test_df = leave_one_out(df, args.user_col, args.item_col, seed=42)
 
     # 2) Mappings + train matrix from TRAIN ONLY
