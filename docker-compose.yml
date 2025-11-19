@@ -15,8 +15,12 @@ services:
       - "8080:8080"
     environment:
       MODEL_REGISTRY: /models
-      MODEL_NAME: ncf
-      MODEL_VERSION: v_ncf
+      MODEL_NAME: ${MODEL_NAME:-ncf}
+      MODEL_VERSION: ${MODEL_VERSION:-v_ncf}
+      ROLLOUT_STRATEGY: ${ROLLOUT_STRATEGY:-fixed}
+      CANARY_VERSION: ${CANARY_VERSION:-}
+      CANARY_PERCENTAGE: ${CANARY_PERCENTAGE:-0}
+      ENVIRONMENT: ${ENVIRONMENT:-production}
     volumes:
       - ./service:/app/service:ro
       - ./recommender:/app/recommender:ro

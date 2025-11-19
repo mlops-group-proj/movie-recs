@@ -111,7 +111,7 @@ flowchart LR
 
 ## Automated Retraining & Model Registry
 
-- **Scheduled retrain:** `.github/workflows/retrain.yml` runs every Monday & Thursday at 05:30 UTC and on demand. It trains ALS on `data/ml1m_prepared/ratings.csv`, exports artifacts via `scripts/export_model.py`, and uploads the newly versioned registry folder as a workflow artifact.
+- **Scheduled retrain:** `.github/workflows/retrain.yml` runs every Monday & Thursday at 05:30 UTC and on demand. It trains ALS on `data/ml1m_prepared/ratings.csv`, exports artifacts via `scripts/export_model.py`, commits to repository, and uploads the newly versioned registry folder as a workflow artifact.
 - **Manual export:**
   ```bash
   python scripts/train_als.py \
@@ -125,7 +125,20 @@ flowchart LR
   ```
   This creates `model_registry/vX.Y/als/` plus a `meta.json` manifest with git SHA, snapshot hash, and metrics, and updates `model_registry/latest.txt`.
 - **Hot swap endpoint:** `GET /switch?model=v0.3` reloads the requested version without redeploying. FastAPI exposes the active version via `/healthz`.
+- **Rollout strategies:** Support for canary deployments, A/B testing, and shadow mode. Configure via environment variables or REST API:
+  ```bash
+  # Canary rollout: 10% traffic to v0.4
+  curl -X POST "http://localhost:8080/rollout/update?strategy=canary&canary_version=v0.4&canary_percentage=10"
+  # Check status
+  curl http://localhost:8080/rollout/status
+  ```
+- **Prometheus metrics:** Track model versions, switches, and rollout status:
+  - `model_version_info` - Current active version with git SHA and data snapshot
+  - `model_switches_total` - Hot-swap operations (success/failure)
+  - Standard metrics: latency, error rates, drift indicators
 - **Provenance fields:** Each inference now records `model_version`, while registry manifests capture `git_sha`, `data_snapshot_id`, `image_digest`, and metrics for traceability.
+
+📖 **[Full Rollout Guide](docs/ROLLOUT_GUIDE.md)** — Comprehensive guide for deployment strategies, canary rollouts, A/B testing, and troubleshooting.
 
 ---
 
