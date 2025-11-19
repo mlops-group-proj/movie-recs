@@ -10,7 +10,7 @@ from service.app import app
 def setup_env():
     """Ensure model registry and version env vars exist."""
     os.environ.setdefault("MODEL_REGISTRY", "model_registry")
-    os.environ.setdefault("MODEL_VERSION", "v0.2")
+    os.environ.setdefault("MODEL_VERSION", "v0.3")
     os.environ.setdefault("MODEL_NAME", "als")
 
 
@@ -49,3 +49,12 @@ def test_fastapi_endpoint(monkeypatch):
     assert "items" in data
     assert isinstance(data["items"], list)
     assert len(data["items"]) == 3
+
+
+def test_switch_endpoint():
+    client = TestClient(app)
+    res = client.get("/switch", params={"model": os.environ.get("MODEL_VERSION", "v0.3")})
+    assert res.status_code == 200
+    payload = res.json()
+    assert payload["status"] == "ok"
+    assert payload["model_version"] == os.environ.get("MODEL_VERSION", "v0.3")

@@ -1,0 +1,60 @@
+name: Automated Retrain
+
+on:
+  schedule:
+    - cron: "30 5 * * 1,4"  # twice a week
+  workflow_dispatch:
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Prepare training workspace
+        run: |
+          rm -rf artifacts/retrain
+          mkdir -p artifacts/retrain
+
+      - name: Train ALS recommender
+        run: |
+          python scripts/train_als.py \
+            --ratings_csv data/ml1m_prepared/ratings.csv \
+            --output_dir artifacts/retrain/als
+
+      - name: Export to model registry
+        run: |
+          python scripts/export_model.py \
+            --source artifacts/retrain/als \
+            --registry model_registry \
+            --model-name als \
+            --data-path data/ml1m_prepared/ratings.csv \
+            --git-sha $GITHUB_SHA
+
+      - name: Capture version
+        id: version
+        run: echo "version=$(cat model_registry/latest.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Attach registry artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-${{ steps.version.outputs.version }}
+          path: model_registry/${{ steps.version.outputs.version }}
+
+      - name: Summarize retrain run
+        run: |
+          echo "### Model Export" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Version: ${{ steps.version.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Artifacts: model-${{ steps.version.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"

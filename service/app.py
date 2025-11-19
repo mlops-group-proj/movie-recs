@@ -6,8 +6,8 @@ from prometheus_client import (
 import os
 import logging
 
-from recommender.factory import get_recommender
 from recommender import drift
+from service.loader import ModelManager, ModelRegistryError
 
 app = FastAPI(title="Movie Recommender API")
 logging.basicConfig(level=logging.INFO)
@@ -18,12 +18,11 @@ logging.basicConfig(level=logging.INFO)
 REQS = Counter("recommend_requests_total", "Requests", ["status"])
 LAT = Histogram("recommend_latency_seconds", "Latency")
 
-# ------------------------------------------------------------------
-# Model load
-# ------------------------------------------------------------------
 MODEL_NAME = os.getenv("MODEL_NAME", "als")
-MODEL_VERSION = os.getenv("MODEL_VERSION", "v0.2")
-recommender = get_recommender(MODEL_NAME)
+MODEL_VERSION = os.getenv("MODEL_VERSION", "v0.3")
+MODEL_REGISTRY = os.getenv("MODEL_REGISTRY", "model_registry")
+model_manager = ModelManager(MODEL_NAME, MODEL_VERSION, MODEL_REGISTRY)
+app.state.model_manager = model_manager
 
 # ------------------------------------------------------------------
 # Drift metrics setup (register once)
@@ -62,7 +61,10 @@ def compute_drift_once():
 # ------------------------------------------------------------------
 @app.get("/healthz")
 def healthz():
-    return {"status": "ok", "version": MODEL_VERSION}
+    return {
+        "status": "ok",
+        "version": app.state.model_manager.current_version,
+    }
 
 
 @app.get("/recommend/{user_id}")
@@ -73,7 +75,7 @@ def recommend(user_id: int, k: int = 20, model: str | None = None):
         model_to_use = model or MODEL_NAME
         if model_to_use != MODEL_NAME:
             raise HTTPException(status_code=400, detail="Only ALS model supported")
-        items = recommender.recommend(user_id, k)
+        items = app.state.model_manager.recommend(user_id, k)
         REQS.labels("200").inc()
         return {"user_id": user_id, "model": model_to_use, "items": items}
     except Exception as e:
@@ -90,3 +92,20 @@ def metrics():
     except Exception as e:
         logging.warning(f"Metrics endpoint error: {e}")
         return Response(status_code=500, content=f"# metrics_error {e}")
+
+
+@app.get("/switch")
+def switch(model: str):
+    """Hot-swap the active recommender version (e.g. /switch?model=v0.3)."""
+    if not model:
+        raise HTTPException(status_code=400, detail="Model query parameter required")
+    try:
+        info = app.state.model_manager.switch(model)
+        return {"status": "ok", **info}
+    except ModelRegistryError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as exc:
+        logging.exception("Model switch failed")
+        raise HTTPException(status_code=500, detail=str(exc))

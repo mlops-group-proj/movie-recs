@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pydantic
+prometheus-client
+numpy
+fastavro
+requests
+python-dotenv
+pytest-cov

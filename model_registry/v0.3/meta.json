@@ -1,0 +1,23 @@
+{
+  "version": "v0.3",
+  "created_at": "2025-11-19T17:39:29.144403+00:00",
+  "model_name": "als",
+  "artifact_path": "/Volumes/Samsung SSD/Docs/FAU/Fall 2025/ML Ops/Project/repo/model_registry/v0.3/als",
+  "git_sha": "207521e0d08abb271998cc9790a9d006e1b0f4eb",
+  "data_snapshot_id": "9c1de44291dc0a7b0f0354cf256a383cd33ce9ea7adcf8debe3d9bc2786b3175",
+  "image_digest": "",
+  "exported_by": "dan",
+  "artifact_sha": "b9ff55f2ec9195911b57f5318876f28191004a639615f465143b05845f266c7b",
+  "artifact_size": 726586,
+  "metrics": {
+    "type": "ALS",
+    "factors": 64,
+    "iterations": 10,
+    "regularization": 0.01,
+    "users": 942,
+    "items": 1443,
+    "k_eval": 10,
+    "hr": 0.013859275053304905,
+    "ndcg": 0.005844693746167784
+  }
+}
