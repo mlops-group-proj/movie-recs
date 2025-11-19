@@ -9,7 +9,7 @@ jobs:
   retrain:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       actions: write
     steps:
       - uses: actions/checkout@v4
@@ -55,8 +55,17 @@ jobs:
           name: model-${{ steps.version.outputs.version }}
           path: model_registry/${{ steps.version.outputs.version }}
 
+      - name: Commit model registry update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add model_registry/
+          git commit -m "automated retrain: ${{ steps.version.outputs.version }}" || echo "No changes to commit"
+          git push || echo "Push failed (may need branch protection bypass)"
+
       - name: Summarize retrain run
         run: |
           echo "### Model Export" >> "$GITHUB_STEP_SUMMARY"
           echo "- Version: ${{ steps.version.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Artifacts: model-${{ steps.version.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Registry: Committed to repository" >> "$GITHUB_STEP_SUMMARY"

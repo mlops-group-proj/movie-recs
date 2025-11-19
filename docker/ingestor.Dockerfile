@@ -26,6 +26,7 @@ RUN addgroup --system app && adduser --system --ingroup app app
 
 COPY --from=builder /opt/venv /opt/venv
 COPY stream/ stream/
+COPY recommender/ recommender/
 
 # Model registry is expected to be mounted (volume or env path)
 VOLUME ["/models"]
