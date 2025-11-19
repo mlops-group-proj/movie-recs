@@ -379,8 +379,138 @@ curl http://localhost:8080/metrics | grep model_version
 
 ---
 
+## A/B Testing & Experimentation
+
+### `GET /experiment/analyze`
+Analyze A/B test results with statistical testing.
+
+**Parameters:**
+- `time_window_minutes` (query, optional) - Analysis time window in minutes (default: 60)
+
+**Requirements:**
+- Rollout strategy must be set to `ab_test`
+- Sufficient traffic must have been collected
+
+**Example:**
+```bash
+curl "http://localhost:8080/experiment/analyze?time_window_minutes=120"
+```
+
+**Response:**
+```json
+{
+  "experiment": {
+    "strategy": "ab_test",
+    "time_window_minutes": 120,
+    "variant_A": "v0.2",
+    "variant_B": "v0.3"
+  },
+  "metrics": {
+    "variant_A": {
+      "requests": 1500,
+      "successes": 1275,
+      "success_rate": 0.85,
+      "latency_p95_ms": 45.2
+    },
+    "variant_B": {
+      "requests": 1500,
+      "successes": 1350,
+      "success_rate": 0.90,
+      "latency_p95_ms": 47.8
+    }
+  },
+  "statistical_analysis": {
+    "metric": "success_rate",
+    "test": "two_proportion_z_test",
+    "results": {
+      "z_statistic": 3.87,
+      "p_value": 0.0001,
+      "confidence_interval": [0.03, 0.07],
+      "delta": 0.05,
+      "variant_a_rate": 0.85,
+      "variant_b_rate": 0.90,
+      "sample_size_a": 1500,
+      "sample_size_b": 1500,
+      "significant": true
+    },
+    "decision": "ship_variant_b",
+    "recommendation": "Variant B is significantly better (+0.0500, p=0.0001). Recommend shipping Variant B."
+  },
+  "latency_comparison": {
+    "variant_A_p95_ms": 45.2,
+    "variant_B_p95_ms": 47.8,
+    "delta_ms": 2.6,
+    "percent_change": 5.8
+  }
+}
+```
+
+**Error Responses:**
+- `400` - Not in A/B test mode
+- `500` - Failed to query metrics from Prometheus
+
+**Statistical Analysis**:
+- **Two-Proportion Z-Test**: Tests if success rates differ significantly between variants
+- **P-value < 0.05**: Statistically significant difference
+- **Confidence Interval**: 95% CI for effect size (delta)
+- **Decision Logic**:
+  - `ship_variant_a`: Keep control variant
+  - `ship_variant_b`: Ship treatment variant
+  - `no_difference`: Either variant acceptable
+  - `inconclusive`: Need more data
+
+**Example Workflow:**
+```bash
+# 1. Start A/B test
+curl -X POST "http://localhost:8080/rollout/update?strategy=ab_test&canary_version=v0.3"
+
+# 2. Generate traffic (wait for sufficient samples)
+
+# 3. Analyze results
+curl "http://localhost:8080/experiment/analyze?time_window_minutes=120"
+
+# 4. Generate report
+python scripts/ab_report.py --time-window 120
+
+# 5. Make decision and ship (if recommended)
+curl "http://localhost:8080/switch?model=v0.3"
+```
+
+---
+
+## CLI Tools
+
+### A/B Test Report Generator
+
+Generate a comprehensive markdown report for A/B test experiments.
+
+**Usage:**
+```bash
+python scripts/ab_report.py [OPTIONS]
+```
+
+**Options:**
+- `--api-url URL` - API base URL (default: http://localhost:8080)
+- `--time-window MINUTES` - Analysis time window (default: 60)
+- `--output PATH` - Output file path (default: reports/ab_test_YYYY-MM-DD.md)
+
+**Example:**
+```bash
+python scripts/ab_report.py --time-window 120 --output reports/experiment_v0.3.md
+```
+
+**Output**: Markdown report with:
+- Experiment summary
+- Metrics comparison table
+- Statistical test results
+- Decision recommendation
+- Next steps
+
+---
+
 ## Additional Resources
 
+- [A/B Testing Guide](AB_TESTING_GUIDE.md) - Complete guide to running experiments
 - [Rollout Guide](ROLLOUT_GUIDE.md) - Comprehensive deployment guide
 - [README](../README.md) - Project overview
 - [GitHub Workflows](../.github/workflows/) - CI/CD pipelines
