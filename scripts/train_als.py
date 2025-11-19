@@ -18,8 +18,8 @@ from implicit.als import AlternatingLeastSquares
 
 
 COLUMN_ALIASES = {
-    "user_id": ["userId", "userid", "userID"],
-    "item_id": ["itemId", "itemid", "itemID", "movieId", "movie_id", "movieID", "movieid"],
+    "user_id": ["userId", "userid", "userID", "user"],
+    "item_id": ["itemId", "itemid", "itemID", "item", "movieId", "movie_id", "movieID", "movieid"],
 }
 
 
