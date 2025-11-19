@@ -9,15 +9,13 @@ python-dotenv
 scikit-learn
 numpy
 pytest
-avro-python3
 fastavro
 scipy
 implicit
 torch==2.4.0
 tabulate
-tqdm
 pytest-cov
 requests
-httpx
 matplotlib
 boto3
+psutil
