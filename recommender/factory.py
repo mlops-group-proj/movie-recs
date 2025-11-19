@@ -4,22 +4,31 @@ import numpy as np
 import json
 import os
 import scipy.sparse as sp
+from pathlib import Path
 
-MODEL_ROOT = os.getenv("MODEL_REGISTRY", "model_registry")
-DEFAULT_VERSION = os.getenv("MODEL_VERSION", "v0.2")
+MODEL_ROOT = Path(os.getenv("MODEL_REGISTRY", "model_registry"))
+DEFAULT_VERSION = os.getenv("MODEL_VERSION", "v0.3")
 
 
-def get_recommender(model_name: str = "als"):
+def get_recommender(model_name: str = "als", version: str | None = None, registry_root: str | None = None):
     """
     Factory returning a recommender instance.
     Supports 'als' and 'ncf'.
     """
     model_name = model_name.lower()
+    root = Path(registry_root) if registry_root else MODEL_ROOT
+    target_version = version or DEFAULT_VERSION
+
     if model_name == "als":
-        path = os.path.join(MODEL_ROOT, DEFAULT_VERSION, "als")
-        return ALSRecommender(path)
+        path = root / target_version / "als"
+        if not path.exists():
+            raise FileNotFoundError(f"ALS artifacts not found at {path}")
+        return ALSRecommender(str(path))
     elif model_name == "ncf":
-        path = os.path.join(MODEL_ROOT, "v_ncf", "model.pt")
+        candidate = root / target_version / "model.pt"
+        if not candidate.exists():
+            candidate = root / "v_ncf" / "model.pt"
+        path = str(candidate)
         return NCFRecommender(path)
     else:
         raise ValueError(f"Unknown model: {model_name}")

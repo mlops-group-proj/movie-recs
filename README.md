@@ -109,6 +109,26 @@ flowchart LR
 
 ---
 
+## Automated Retraining & Model Registry
+
+- **Scheduled retrain:** `.github/workflows/retrain.yml` runs every Monday & Thursday at 05:30 UTC and on demand. It trains ALS on `data/ml1m_prepared/ratings.csv`, exports artifacts via `scripts/export_model.py`, and uploads the newly versioned registry folder as a workflow artifact.
+- **Manual export:**
+  ```bash
+  python scripts/train_als.py \
+      --ratings_csv data/ml1m_prepared/ratings.csv \
+      --output_dir artifacts/latest/als
+  python scripts/export_model.py \
+      --source artifacts/latest/als \
+      --registry model_registry \
+      --model-name als \
+      --data-path data/ml1m_prepared/ratings.csv
+  ```
+  This creates `model_registry/vX.Y/als/` plus a `meta.json` manifest with git SHA, snapshot hash, and metrics, and updates `model_registry/latest.txt`.
+- **Hot swap endpoint:** `GET /switch?model=v0.3` reloads the requested version without redeploying. FastAPI exposes the active version via `/healthz`.
+- **Provenance fields:** Each inference now records `model_version`, while registry manifests capture `git_sha`, `data_snapshot_id`, `image_digest`, and metrics for traceability.
+
+---
+
 ## Key Learnings
 
 - Building **stream-aware** ML pipelines with Kafka.  
