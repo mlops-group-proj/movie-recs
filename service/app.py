@@ -40,6 +40,10 @@ MODEL_VERSION_INFO = Gauge("model_version_info", "Current model version", ["mode
 MODEL_SWITCHES = Counter("model_switches_total", "Model hot-swap operations", ["from_version", "to_version", "status"])
 MODEL_LOAD_TIME = Histogram("model_load_seconds", "Model loading time", buckets=(0.1, 0.5, 1.0, 2.0, 5.0, 10.0))
 
+# A/B testing metrics
+AB_REQUESTS = Counter("ab_test_requests_total", "A/B test requests by variant", ["variant", "status"])
+AB_LATENCY = Histogram("ab_test_latency_seconds", "A/B test latency by variant", ["variant"], buckets=(0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0))
+
 # SLO indicators
 SLO_LATENCY_TARGET = Gauge("slo_latency_target_seconds", "SLO latency target in seconds")
 SLO_AVAILABILITY_TARGET = Gauge("slo_availability_target_ratio", "SLO availability target (0-1)")
@@ -131,17 +135,32 @@ def healthz():
 
 @app.get("/recommend/{user_id}")
 def recommend(user_id: int, k: int = 20, model: str | None = None):
-    """Return top-K recommendations for a user."""
+    """Return top-K recommendations for a user with A/B routing support."""
     start_time = time.time()
     endpoint = "recommend"
 
     try:
-        model_to_use = model or MODEL_NAME
-        if model_to_use != MODEL_NAME:
-            REQS.labels(status="400", endpoint=endpoint).inc()
-            ERRORS.labels(error_type="invalid_model", endpoint=endpoint).inc()
-            raise HTTPException(status_code=400, detail="Only ALS model supported")
+        # Select version based on rollout strategy (e.g., A/B test)
+        selected_version = app.state.rollout_config.select_version(user_id)
 
+        # Use explicitly provided model or rollout-selected version
+        model_to_use = model or selected_version
+
+        # Track which variant is being used for A/B testing
+        from service.rollout import RolloutStrategy
+        variant = None
+        if app.state.rollout_config.strategy == RolloutStrategy.AB_TEST:
+            # Variant A = even user_ids, Variant B = odd user_ids
+            variant = "variant_A" if (user_id % 2 == 0) else "variant_B"
+
+        # Switch to selected version if needed
+        if model_to_use != app.state.model_manager.current_version:
+            try:
+                app.state.model_manager.switch(model_to_use)
+            except Exception as e:
+                logging.warning(f"Failed to switch to {model_to_use}: {e}")
+
+        # Generate recommendations
         items = app.state.model_manager.recommend(user_id, k)
 
         # Record success metrics
@@ -149,7 +168,17 @@ def recommend(user_id: int, k: int = 20, model: str | None = None):
         LAT.labels(endpoint=endpoint).observe(latency)
         REQS.labels(status="200", endpoint=endpoint).inc()
 
-        return {"user_id": user_id, "model": model_to_use, "items": items}
+        # Record A/B test metrics if in A/B mode
+        if variant:
+            AB_REQUESTS.labels(variant=variant, status="200").inc()
+            AB_LATENCY.labels(variant=variant).observe(latency)
+
+        return {
+            "user_id": user_id,
+            "model": model_to_use,
+            "items": items,
+            "variant": variant  # Include variant for transparency
+        }
 
     except HTTPException:
         raise
@@ -159,6 +188,12 @@ def recommend(user_id: int, k: int = 20, model: str | None = None):
         LAT.labels(endpoint=endpoint).observe(latency)
         REQS.labels(status="500", endpoint=endpoint).inc()
         ERRORS.labels(error_type="internal_error", endpoint=endpoint).inc()
+
+        # Record A/B test error metrics if applicable
+        if variant:
+            AB_REQUESTS.labels(variant=variant, status="500").inc()
+            AB_LATENCY.labels(variant=variant).observe(latency)
+
         logging.exception(f"Recommendation error for user {user_id}")
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -256,4 +291,121 @@ def rollout_status():
     return {
         "rollout": app.state.rollout_config.to_dict(),
         "active_version": app.state.model_manager.current_version,
+    }
+
+
+@app.get("/experiment/analyze")
+def analyze_experiment(time_window_minutes: int = 60):
+    """Analyze A/B test results with statistical testing.
+
+    Queries Prometheus for A/B test metrics and runs statistical analysis.
+
+    Args:
+        time_window_minutes: Time window to analyze (default: 60 minutes)
+
+    Returns:
+        JSON with experiment analysis, statistical tests, and recommendation
+    """
+    from service.rollout import RolloutStrategy
+    import requests
+    from service.ab_analysis import analyze_experiment as run_analysis
+
+    # Check if we're in A/B test mode
+    if app.state.rollout_config.strategy != RolloutStrategy.AB_TEST:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Not in A/B test mode. Current strategy: {app.state.rollout_config.strategy.value}"
+        )
+
+    # Query Prometheus for A/B test metrics
+    prom_url = os.getenv("PROMETHEUS_URL", "http://localhost:9090")
+    time_range = f"{time_window_minutes}m"
+
+    try:
+        # Get request counts per variant
+        query_requests_a = f'sum(increase(ab_test_requests_total{{variant="variant_A"}}[{time_range}]))'
+        query_requests_b = f'sum(increase(ab_test_requests_total{{variant="variant_B"}}[{time_range}]))'
+
+        # Get success counts (status="200")
+        query_success_a = f'sum(increase(ab_test_requests_total{{variant="variant_A",status="200"}}[{time_range}]))'
+        query_success_b = f'sum(increase(ab_test_requests_total{{variant="variant_B",status="200"}}[{time_range}]))'
+
+        # Get latency percentiles
+        query_latency_p95_a = f'histogram_quantile(0.95, sum(rate(ab_test_latency_seconds_bucket{{variant="variant_A"}}[{time_range}])) by (le))'
+        query_latency_p95_b = f'histogram_quantile(0.95, sum(rate(ab_test_latency_seconds_bucket{{variant="variant_B"}}[{time_range}])) by (le))'
+
+        def query_prom(query: str) -> float:
+            """Query Prometheus and return scalar result."""
+            resp = requests.get(f"{prom_url}/api/v1/query", params={"query": query}, timeout=5)
+            resp.raise_for_status()
+            data = resp.json()
+            result = data.get("data", {}).get("result", [])
+            if not result:
+                return 0.0
+            return float(result[0]["value"][1])
+
+        # Fetch metrics
+        requests_a = int(query_prom(query_requests_a))
+        requests_b = int(query_prom(query_requests_b))
+        success_a = int(query_prom(query_success_a))
+        success_b = int(query_prom(query_success_b))
+        latency_p95_a = query_prom(query_latency_p95_a)
+        latency_p95_b = query_prom(query_latency_p95_b)
+
+    except Exception as e:
+        logging.error(f"Failed to query Prometheus: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch metrics from Prometheus: {e}")
+
+    # Check if we have enough data
+    if requests_a == 0 or requests_b == 0:
+        return {
+            "status": "insufficient_data",
+            "message": f"No A/B test data found in the last {time_window_minutes} minutes. Generate traffic first.",
+            "metrics": {
+                "variant_A": {"requests": requests_a, "successes": success_a},
+                "variant_B": {"requests": requests_b, "successes": success_b}
+            }
+        }
+
+    # Run statistical analysis on success rate
+    analysis = run_analysis(
+        variant_a_successes=success_a,
+        variant_a_trials=requests_a,
+        variant_b_successes=success_b,
+        variant_b_trials=requests_b,
+        metric_name="success_rate"
+    )
+
+    # Add latency comparison
+    latency_delta = latency_p95_b - latency_p95_a
+    latency_pct_change = (latency_delta / latency_p95_a * 100) if latency_p95_a > 0 else 0
+
+    return {
+        "experiment": {
+            "strategy": "ab_test",
+            "time_window_minutes": time_window_minutes,
+            "variant_A": app.state.rollout_config.primary_version,
+            "variant_B": app.state.rollout_config.canary_version,
+        },
+        "metrics": {
+            "variant_A": {
+                "requests": requests_a,
+                "successes": success_a,
+                "success_rate": success_a / requests_a if requests_a > 0 else 0,
+                "latency_p95_ms": latency_p95_a * 1000
+            },
+            "variant_B": {
+                "requests": requests_b,
+                "successes": success_b,
+                "success_rate": success_b / requests_b if requests_b > 0 else 0,
+                "latency_p95_ms": latency_p95_b * 1000
+            }
+        },
+        "statistical_analysis": analysis,
+        "latency_comparison": {
+            "variant_A_p95_ms": latency_p95_a * 1000,
+            "variant_B_p95_ms": latency_p95_b * 1000,
+            "delta_ms": latency_delta * 1000,
+            "percent_change": latency_pct_change
+        }
     }
