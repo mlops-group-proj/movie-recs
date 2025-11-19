@@ -32,6 +32,8 @@ jobs:
         run: |
           python scripts/train_als.py \
             --ratings_csv data/ml1m_prepared/ratings.csv \
+            --user_col user \
+            --item_col item \
             --output_dir artifacts/retrain/als
 
       - name: Export to model registry
