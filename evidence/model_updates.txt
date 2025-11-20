@@ -24,9 +24,9 @@ Best 7-Day Window:
 Requirement Check:
   Required:  ≥2 updates within 7 days
   Actual:    5 updates
-  Status:    ✅ PASS
+  Status:      PASS
 
-✅ SUCCESS: Found 5 model updates in a 7-day window (≥2 required)
+  SUCCESS: Found 5 model updates in a 7-day window (≥2 required)
 
 Summary:
   The system has successfully performed 5 model updates

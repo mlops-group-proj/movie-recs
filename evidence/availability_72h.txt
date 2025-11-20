@@ -15,9 +15,9 @@ Metrics:
 Availability:
   Percentage:  97.32%
   Requirement: ≥70.00%
-  Status:      ✅ PASS
+  Status:        PASS
 
-✅ SUCCESS: System availability (97.32%) exceeds requirement (≥70%)
+  SUCCESS: System availability (97.32%) exceeds requirement (≥70%)
 
 Request Breakdown by Hour (sample):
   2025-11-16 19:00: 948 requests, 97.71% success

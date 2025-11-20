@@ -3,10 +3,10 @@ System Information
 
 Platform: Docker (Linux containers)
 Services Running:
-  ✅ API (movie-recommender:8080)
-  ✅ Prometheus (prometheus:9090)
-  ✅ Grafana (grafana:3000)
-  ✅ Ingestor (movie-ingestor)
+    API (movie-recommender:8080)
+    Prometheus (prometheus:9090)
+    Grafana (grafana:3000)
+    Ingestor (movie-ingestor)
 
 Current Model:
   Version: v_ncf

@@ -23,7 +23,7 @@ echo "  Key Name: $KEY_NAME"
 echo ""
 
 # Step 1: Launch EC2 instance
-echo "1️⃣  Launching EC2 instance..."
+echo "  Launching EC2 instance..."
 INSTANCE_ID=$(aws ec2 run-instances \
   --region $REGION \
   --image-id $AMI_ID \
@@ -38,7 +38,7 @@ INSTANCE_ID=$(aws ec2 run-instances \
 echo "*  Instance launched: $INSTANCE_ID"
 
 # Step 2: Wait for instance to be running
-echo "2️⃣  Waiting for instance to be running..."
+echo "  Waiting for instance to be running..."
 aws ec2 wait instance-running --region $REGION --instance-ids $INSTANCE_ID
 echo "*  Instance is running"
 
@@ -52,11 +52,11 @@ PUBLIC_IP=$(aws ec2 describe-instances \
 echo "*  Public IP: $PUBLIC_IP"
 
 # Step 4: Wait for SSH to be ready
-echo "3️⃣  Waiting for SSH to be ready (this may take a minute)..."
+echo "   Waiting for SSH to be ready (this may take a minute)..."
 sleep 30
 
 # Step 5: Setup instance
-echo "4️⃣  Setting up instance..."
+echo "  Setting up instance..."
 ssh -i ~/.ssh/${KEY_NAME}.pem -o StrictHostKeyChecking=no ubuntu@$PUBLIC_IP << 'EOF'
   # Update system
   sudo apt-get update

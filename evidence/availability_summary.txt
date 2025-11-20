@@ -6,13 +6,13 @@ Requirement: ≥70% availability in both time windows
 
 72 Hours Before Submission:
   Availability: 97.32%
-  Status:       ✅ PASS
+  Status:         PASS
 
 144 Hours After Submission:
   Availability: 98.09%
-  Status:       ✅ PASS
+  Status:         PASS
 
-Overall Status: ✅ ALL REQUIREMENTS MET
+Overall Status:   ALL REQUIREMENTS MET
 
 The system has demonstrated high availability in both required time
 windows, significantly exceeding the 70% threshold.

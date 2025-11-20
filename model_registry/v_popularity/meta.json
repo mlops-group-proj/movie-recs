@@ -4,5 +4,11 @@
   "hr@k": 0.04370860927152318,
   "ndcg@k": 0.022321808520540696,
   "train_seconds": 1.1182470321655273,
-  "model_size_bytes": 10882
+  "model_size_bytes": 10882,
+  "version": {
+    "name": "v_popularity",
+    "git_sha": "ab9511e72012122790a1a12304ca0b9ff834135c",
+    "data_snapshot_id": "ml1m_20231115",
+    "created_at": "2025-11-20T02:30:00Z"
+  }
 }

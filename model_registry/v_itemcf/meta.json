@@ -4,5 +4,11 @@
   "hr@k": 0.07533112582781457,
   "ndcg@k": 0.04011580792990283,
   "train_seconds": 6.231078863143921,
-  "model_size_bytes": 90517548
+  "model_size_bytes": 90517548,
+  "version": {
+    "name": "v_itemcf",
+    "git_sha": "ab9511e72012122790a1a12304ca0b9ff834135c",
+    "data_snapshot_id": "ml1m_20231115",
+    "created_at": "2025-11-20T02:30:00Z"
+  }
 }
