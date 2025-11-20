@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+pydantic
+prometheus-client
+numpy
+pandas
+scipy
+scikit-learn
+fastavro
+requests
+python-dotenv
+matplotlib
+implicit
+torch==2.4.0

@@ -1,0 +1,21 @@
+REPOSITORY               TAG           IMAGE ID       CREATED         SIZE
+repo-api                 latest        aa88244332c4   3 hours ago     1.58GB
+repo-ingestor            latest        f07808c7e8fe   4 hours ago     754MB
+repo-trainer             latest        fcb1a20756f0   4 hours ago     1.79GB
+<none>                   <none>        82d434cb272e   47 hours ago    1.79GB
+<none>                   <none>        c2a4e9b43da3   47 hours ago    2.21GB
+<none>                   <none>        fac061f36a3d   47 hours ago    754MB
+<none>                   <none>        8edf2744a4ba   47 hours ago    391MB
+<none>                   <none>        730e1ae7f0b8   47 hours ago    1.18GB
+<none>                   <none>        fe761e6a9ef8   47 hours ago    816MB
+<none>                   <none>        a38001c74a4e   47 hours ago    1.79GB
+<none>                   <none>        b301a7714bbd   47 hours ago    754MB
+<none>                   <none>        4e6c8884324e   47 hours ago    391MB
+movie-recs-trainer       local         2516948b68bb   2 days ago      1.87GB
+movie-recs-ingestor      local         1798ac170aaa   2 days ago      1.87GB
+movie-recs-recommender   local         41df346cd574   2 days ago      1.87GB
+prom/prometheus          latest        49214755b615   2 weeks ago     472MB
+reco-api                 dev           e0ad1bd40dae   4 weeks ago     969MB
+grafana/grafana          latest        35c41e0fd029   4 weeks ago     909MB
+bitnamilegacy/kafka      latest        f45d5b813412   4 months ago    731MB
+python                   3.11.7-slim   53d6284a40ea   23 months ago   223MB

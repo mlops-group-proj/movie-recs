@@ -1,0 +1,10 @@
+  backup-src   f075cd8 fixed artifact
+  ci-test      c49f819 fix loop in probe.py
+  dan          d43fb46 new model training
+  drift        a3bd8f1 fixing drift
+  fixingm2     029d450 Merge pull request #86 from mlops-group-proj/Arvin
+  lakshmi      e40fdd9 [ahead 14, behind 70] Merge Lakshmi's outside repo into new branch here
+  lakshmi-copy e40fdd9 Merge Lakshmi's outside repo into new branch here
+* main         0ce26a1 aws deployment
+  readme       0350efc updated README.md
+  testing      a6cd90c [behind 184] Merge pull request #49 from mlops-group-proj/dan

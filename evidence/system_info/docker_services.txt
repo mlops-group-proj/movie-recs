@@ -1,0 +1,4 @@
+NAME                IMAGE                    COMMAND                  SERVICE      CREATED       STATUS       PORTS
+grafana             grafana/grafana:latest   "/run.sh"                grafana      3 hours ago   Up 2 hours   0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
+movie-recommender   repo-api                 "uvicorn service.app…"   api          3 hours ago   Up 3 hours   0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
+prometheus          prom/prometheus:latest   "/bin/prometheus --c…"   prometheus   2 hours ago   Up 2 hours   0.0.0.0:9090->9090/tcp, [::]:9090->9090/tcp

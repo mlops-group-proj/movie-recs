@@ -1,0 +1,21 @@
+{
+  "observation_period": {
+    "start": "2025-11-13T00:06:19.063661Z",
+    "end": "2025-11-20T00:06:19.063661Z",
+    "duration_days": 7
+  },
+  "total_switches": 0,
+  "switches": [],
+  "best_7day_window": {
+    "start": null,
+    "end": null,
+    "switch_count": 0,
+    "switches": []
+  },
+  "requirement": {
+    "minimum_updates": 2,
+    "within_days": 7,
+    "actual_updates": 0,
+    "meets_requirement": false
+  }
+}

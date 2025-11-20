@@ -1,0 +1,19 @@
+{
+  "type": "record",
+  "name": "RecoResponse",
+  "namespace": "mlprod",
+  "fields": [
+    {"name": "request_id", "type": "string"},
+    {"name": "ts", "type": "long"},
+    {"name": "user_id", "type": "int"},
+    {"name": "status", "type": "int"},
+    {"name": "latency_ms", "type": "int"},
+    {"name": "k", "type": "int"},
+    {"name": "movie_ids", "type": {"type": "array", "items": "int"}},
+    {"name": "model_version", "type": "string"},
+    {"name": "model_name", "type": "string"},
+    {"name": "git_sha", "type": "string"},
+    {"name": "data_snapshot_id", "type": "string"},
+    {"name": "container_image_digest", "type": ["null", "string"], "default": null}
+  ]
+}

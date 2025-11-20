@@ -1,0 +1,11 @@
+{
+  "status": "ok",
+  "version": "v0.2",
+  "rollout": {
+    "strategy": "canary",
+    "primary_version": "v0.2",
+    "canary_version": "v0.2",
+    "canary_percentage": 10.0,
+    "environment": "production"
+  }
+}

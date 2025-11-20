@@ -1,0 +1,36 @@
+{
+  "collection_timestamp": "2025-11-20T00:06:19.690989Z",
+  "evidence_collected": {
+    "availability_reports": [
+      "availability/availability_72h.json",
+      "availability/availability_144h.json"
+    ],
+    "model_update_verification": [
+      "model_updates/model_updates_verification.json"
+    ],
+    "api_samples": [
+      "api_samples/recommend_sample.json",
+      "api_samples/recommend_with_provenance.json",
+      "api_samples/rollout_status.json",
+      "api_samples/healthz.json"
+    ],
+    "model_registry_info": [
+      "model_registry/versions_summary.json"
+    ],
+    "git_history": [
+      "git_history/branches.txt",
+      "git_history/commits.txt",
+      "git_history/current_sha.txt"
+    ],
+    "system_info": [
+      "system_info/reqs-recommender.txt",
+      "system_info/reqs-ingestor.txt",
+      "system_info/docker_services.txt",
+      "system_info/docker_images.txt"
+    ],
+    "logs": [
+      "logs/prometheus_logs_sample.txt",
+      "logs/api_logs_sample.txt"
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+confluent-kafka
+pandas
+pyarrow
+fastavro
+python-dotenv
+pydantic
+boto3

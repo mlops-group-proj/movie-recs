@@ -1,0 +1,50 @@
+0ce26a1294894b50681e5b3e1a8bd57ec4cef96e|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-19 16:05:02 -0800|aws deployment
+f45ede7c467053b1f5461f703b578217230406f2|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-19 15:39:44 -0800|Merge pull request #128 from mlops-group-proj/120-availability-calc-deliverables-packaging
+4d344329fb58a0c5b83a739bc00dfd4dbf0d8917|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-19 15:38:42 -0800|issue 120
+47749ec032a040c0d7df29c4b9b73c236fae879c|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-19 15:27:12 -0800|Merge pull request #127 from mlops-group-proj/119-provenance-logging-avro-schema
+10002b04212be2b61bbc32f57b7a93392d3c0bbb|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-19 15:25:54 -0800|issue 119
+a58ca50c59e93433596625334994d4be65dfd7f5|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-19 15:11:06 -0800|Merge pull request #126 from mlops-group-proj/118-ab-testing-routing-statistical-analysis
+eb75eb5955fd4c3ac9eae5eb9239a72b2a732f03|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-19 15:03:15 -0800|issue 118
+1e1f7f6618ae9e37b7c129e836645b64fff0db8a|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-19 14:40:41 -0800|Merge pull request #125 from mlops-group-proj/117-extend-metrics-slo-dashboard-alerts
+a8bb9879923be6c0f70e45aa3b89460aef2a73de|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-19 14:36:30 -0800|issue 117
+03d6e6bfcf100f13791f03e1af5ddbd147fc135f|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-19 13:10:18 -0800|Merge pull request #124 from mlops-group-proj/116-create-croncloud-scheduleraction-to-retrain-push-model_registryvxy-artifacts-and-expose-a-hot-swap-endpointenv-based-rollout
+7eb2539be044ecd0a45c42725557123743fe6fee|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-19 13:07:19 -0800|issue 116
+31392b749b7c5c44dd734be789ce0e22e314ae90|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-19 12:20:35 -0800|Merge pull request #123 from mlops-group-proj/116-create-croncloud-scheduleraction-to-retrain-push-model_registryvxy-artifacts-and-expose-a-hot-swap-endpointenv-based-rollout
+17bd9bf26714e5fa69552e51c9b49342de8725c3|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-19 11:31:14 -0800|automated retrain
+97f5344f928315d273626f12a21c95890f3d504c|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-19 11:24:02 -0800|automated retrain
+3edb5b2d291f5b734326bb3df24306004de38a0e|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-19 11:15:53 -0800|automated retrain
+c62fa46aa08ff82209ea39fea2cbb804ebecb6e0|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-19 10:53:50 -0800|automated retrain
+88babe9359b81b8efce897a9af3b71e02ed61b8a|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-19 10:51:51 -0800|automated retrain
+cf1475e7ee2be8575990446820c0f6d67916f549|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-19 10:26:15 -0800|Merge pull request #122 from mlops-group-proj/116-create-croncloud-scheduleraction-to-retrain-push-model_registryvxy-artifacts-and-expose-a-hot-swap-endpointenv-based-rollout
+6b8400c0b0f60251c0a60783135f15c7b12f6ea2|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-19 10:26:07 -0800|Merge branch 'main' into 116-create-croncloud-scheduleraction-to-retrain-push-model_registryvxy-artifacts-and-expose-a-hot-swap-endpointenv-based-rollout
+b4a605344ae0ea16658b014e050eb46444ae272d|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-19 10:25:04 -0800|automated retrain
+8527458cd0672f1fb8b65bcd4fcacb53a23d3c84|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-19 09:15:08 -0800|Merge pull request #121 from mlops-group-proj/115-add-multi-stage-builds-and-slim-images
+837c1a0b5df3a9e894d9bb394eca8d000cbb5626|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-19 09:13:58 -0800|created slim, multi-stage build
+207521e0d08abb271998cc9790a9d006e1b0f4eb|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-10 12:54:29 -0800|Merge pull request #112 from mlops-group-proj/111-kafka-still-using-mock-data-in-production
+8bcf6eeb82dcacad343a16e4874419f9c2b426bf|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-10 12:52:26 -0800|swtiched probe from mock data to real data
+b678767cef3a4fb8a8c5ca2a731f61617241385c|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-08 18:53:12 -0800|Update issue templates
+651c4a402856e7317127d52a16ea4d36b27f722c|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-08 18:52:48 -0800|Revise SECURITY.md for supported versions and reporting
+b533a63023c4b11aa4cf5b978917febdbfc7234e|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-08 18:51:04 -0800|Add MIT License to the project
+9c47ed44ec2e56f8db348afb0dff09527942364e|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-08 18:50:04 -0800|Add note about project contribution status
+51a0fbab161f41a758c4cab9d606d5fb4957325c|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-08 18:48:58 -0800|Add Contributor Covenant Code of Conduct
+db5031b12d6448062210e27ccd1a1adca44bc19c|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-08 18:41:13 -0800|fixed README
+f38e2afbd2cf05780460ece13e0a5dfcc86fb009|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-08 18:35:32 -0800|fixed README
+b4b1af35e129d3a814d8ad3d18533ef52b0dd365|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-08 18:34:15 -0800|fixed README
+e6bdb68e9d5fd789c17a6f5f7d9611dd0beaf36a|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-08 18:29:42 -0800|fixed README
+533d36c66669847a04ba2ed70954976f6390b2c1|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-08 18:22:31 -0800|updated README.md
+5155b0779c4e58a7d07e19d5463fe65d2a0c6099|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-08 18:20:40 -0800|Merge pull request #110 from mlops-group-proj/readme
+0350efc0537a20e16b6a34034e2f9264fbf8439e|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-08 18:19:47 -0800|updated README.md
+6a46d1a10a0bd8b9791b2624b71c385e2466d754|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-08 17:17:35 -0800|Merge pull request #108 from mlops-group-proj/106-finalize-multi-stage-dockerfiles-for-recommender-api-ingestor-trainer-small-image-size
+2060d4c1b2febf5c80a95f33ff72ec6254fa57ba|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-08 17:14:07 -0800|Containerizing
+869da44c4831457698477d7c7a4b96a666b9fc55|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-07 18:22:19 -0800|Merge pull request #105 from mlops-group-proj/drift
+a3bd8f1abf4b6bda842f647b1b3c7e9436b92f2f|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-07 18:16:12 -0800|fixing drift
+fa6944fecd0a8f11ac6c8111867c04c5bb039c9f|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-07 15:24:54 -0800|fixing drift output
+9dce0a9eb2bb9cdda83116f64561d5c7a8a568f6|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-07 13:00:17 -0800|Merge pull request #104 from mlops-group-proj/drift
+88ba0bc215c4c67cea23e077d2851518e31e7125|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-07 12:59:24 -0800|fixing drift output
+9c7b8bb219fc0235d8acdbb17d14bf3977591946|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-06 21:06:45 -0800|fixed test coverage
+7a881a199ec34a58722907a6a6e96f1a0dbce702|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-06 21:03:56 -0800|fixed test coverage
+f4e5860390bfe2471ea2d037151bbcbea4c6691f|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-06 20:33:39 -0800|fixed test coverage
+d939f8b3a321d6e8ffe3700b67c7151e450ccd56|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-06 19:16:23 -0800|fixing tests
+48b9cda248821e8263f181ea2cd766a8cc566002|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-06 18:38:29 -0800|fixing tests
+cbd02f85b0d86a32d74d0629a2e84f1579c58e1b|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-06 18:16:37 -0800|fixing tests
+8c2bdbcb1f757f50cba36efe150e2068a75ac2e8|Dan Zimmerman|98485231+z3301@users.noreply.github.com|2025-11-06 18:09:24 -0800|adding tests

@@ -1,0 +1,96 @@
+{
+  "submission_date": "2025-11-20T00:07:55.998514Z",
+  "deliverables": [
+    {
+      "id": 1,
+      "name": "Training Pipeline",
+      "description": "End-to-end pipeline producing versioned model artifacts",
+      "evidence": [
+        "model_registry/v*/meta.json",
+        "git_history/commits.txt",
+        "code_samples/recommender/als.py"
+      ],
+      "status": "\u2705 Complete"
+    },
+    {
+      "id": 2,
+      "name": "API Service",
+      "description": "HTTP service with /recommend/{user_id} endpoint",
+      "evidence": [
+        "api_samples/recommend_sample.json",
+        "api_samples/healthz.json",
+        "code_samples/service/app.py"
+      ],
+      "status": "\u2705 Complete"
+    },
+    {
+      "id": 3,
+      "name": "Model Hot-Swap",
+      "description": "Switch model versions without restart",
+      "evidence": [
+        "model_updates/model_updates_verification.json",
+        "code_samples/service/loader.py",
+        "api_samples/rollout_status.json"
+      ],
+      "status": "\u2705 Complete"
+    },
+    {
+      "id": 4,
+      "name": "Monitoring",
+      "description": "Metrics export with p95 latency, error rate, uptime",
+      "evidence": [
+        "api_samples/metrics.txt",
+        "code_samples/prometheus/prometheus.yml",
+        "availability/availability_*.json"
+      ],
+      "status": "\u2705 Complete"
+    },
+    {
+      "id": 5,
+      "name": "Experimentation (A/B Testing)",
+      "description": "A/B split with statistical testing",
+      "evidence": [
+        "docs/AB_TESTING_GUIDE.md",
+        "code_samples/service/ab_analysis.py",
+        "api_samples/recommend_sample.json (variant field)"
+      ],
+      "status": "\u2705 Complete"
+    },
+    {
+      "id": 6,
+      "name": "Provenance",
+      "description": "Log request_id, model_version, git_sha, data_snapshot_id, etc.",
+      "evidence": [
+        "api_samples/recommend_with_provenance.json",
+        "api_samples/trace_sample.json",
+        "docs/PROVENANCE_GUIDE.md",
+        "code_samples/stream/schemas/reco_response.avsc"
+      ],
+      "status": "\u2705 Complete"
+    },
+    {
+      "id": 7,
+      "name": "Availability Window",
+      "description": "\u226570% availability during 72h before and 144h after submission",
+      "evidence": [
+        "availability/availability_72h.json",
+        "availability/availability_144h.json"
+      ],
+      "status": "\u2705 Complete (verify after 144h)"
+    },
+    {
+      "id": 8,
+      "name": "Model Updates",
+      "description": "\u22652 model updates within same 7-day window",
+      "evidence": [
+        "model_updates/model_updates_verification.json"
+      ],
+      "status": "\u2705 Complete"
+    }
+  ],
+  "summary": {
+    "total_deliverables": 8,
+    "completed": 8,
+    "completion_percentage": 100.0
+  }
+}

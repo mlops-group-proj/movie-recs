@@ -1,0 +1,93 @@
+{
+  "versions": [
+    {
+      "version": "v0.1"
+    },
+    {
+      "version": "v0.2"
+    },
+    {
+      "version": "v0.3",
+      "metadata": {
+        "version": "v0.3",
+        "created_at": "2025-11-19T17:39:29.144403+00:00",
+        "model_name": "als",
+        "artifact_path": "/Volumes/Samsung SSD/Docs/FAU/Fall 2025/ML Ops/Project/repo/model_registry/v0.3/als",
+        "git_sha": "207521e0d08abb271998cc9790a9d006e1b0f4eb",
+        "data_snapshot_id": "9c1de44291dc0a7b0f0354cf256a383cd33ce9ea7adcf8debe3d9bc2786b3175",
+        "image_digest": "",
+        "exported_by": "dan",
+        "artifact_sha": "b9ff55f2ec9195911b57f5318876f28191004a639615f465143b05845f266c7b",
+        "artifact_size": 726586,
+        "metrics": {
+          "type": "ALS",
+          "factors": 64,
+          "iterations": 10,
+          "regularization": 0.01,
+          "users": 942,
+          "items": 1443,
+          "k_eval": 10,
+          "hr": 0.013859275053304905,
+          "ndcg": 0.005844693746167784
+        }
+      }
+    },
+    {
+      "version": "v_als",
+      "metadata": {
+        "model": "als",
+        "k": 10,
+        "factors": 64,
+        "reg": 0.01,
+        "iters": 15,
+        "hr@k": 0.09884105960264901,
+        "ndcg@k": 0.04895005937591766,
+        "train_seconds": 3.13189697265625,
+        "model_size_bytes": 2581932
+      }
+    },
+    {
+      "version": "v_drift"
+    },
+    {
+      "version": "v_itemcf",
+      "metadata": {
+        "model": "itemcf",
+        "k": 10,
+        "hr@k": 0.07533112582781457,
+        "ndcg@k": 0.04011580792990283,
+        "train_seconds": 6.231078863143921,
+        "model_size_bytes": 90517548
+      }
+    },
+    {
+      "version": "v_ncf",
+      "metadata": {
+        "model": "ncf",
+        "emb": 128,
+        "epochs": 15,
+        "batch": 8192,
+        "neg": 8,
+        "lr": 0.001,
+        "k": 10,
+        "hr@k": 0.13725165562913907,
+        "ndcg@k": 0.06685163005189132,
+        "train_seconds": 376.4692871570587,
+        "model_size_bytes": 5284584,
+        "n_users": 6040,
+        "n_items": 3952
+      }
+    },
+    {
+      "version": "v_popularity",
+      "metadata": {
+        "model": "popularity",
+        "k": 10,
+        "hr@k": 0.04370860927152318,
+        "ndcg@k": 0.022321808520540696,
+        "train_seconds": 1.1182470321655273,
+        "model_size_bytes": 10882
+      }
+    }
+  ]
+}

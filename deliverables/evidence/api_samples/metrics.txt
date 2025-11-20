@@ -1,0 +1,87 @@
+# HELP python_gc_objects_collected_total Objects collected during gc
+# TYPE python_gc_objects_collected_total counter
+python_gc_objects_collected_total{generation="0"} 7779.0
+python_gc_objects_collected_total{generation="1"} 768.0
+python_gc_objects_collected_total{generation="2"} 20.0
+# HELP python_gc_objects_uncollectable_total Uncollectable objects found during GC
+# TYPE python_gc_objects_uncollectable_total counter
+python_gc_objects_uncollectable_total{generation="0"} 0.0
+python_gc_objects_uncollectable_total{generation="1"} 0.0
+python_gc_objects_uncollectable_total{generation="2"} 0.0
+# HELP python_gc_collections_total Number of times this generation was collected
+# TYPE python_gc_collections_total counter
+python_gc_collections_total{generation="0"} 624.0
+python_gc_collections_total{generation="1"} 56.0
+python_gc_collections_total{generation="2"} 5.0
+# HELP python_info Python platform information
+# TYPE python_info gauge
+python_info{implementation="CPython",major="3",minor="11",patchlevel="7",version="3.11.7"} 1.0
+# HELP process_virtual_memory_bytes Virtual memory size in bytes.
+# TYPE process_virtual_memory_bytes gauge
+process_virtual_memory_bytes 1.866993664e+09
+# HELP process_resident_memory_bytes Resident memory size in bytes.
+# TYPE process_resident_memory_bytes gauge
+process_resident_memory_bytes 3.5465216e+08
+# HELP process_start_time_seconds Start time of the process since unix epoch in seconds.
+# TYPE process_start_time_seconds gauge
+process_start_time_seconds 1.76358612869e+09
+# HELP process_cpu_seconds_total Total user and system CPU time spent in seconds.
+# TYPE process_cpu_seconds_total counter
+process_cpu_seconds_total 48.41
+# HELP process_open_fds Number of open file descriptors.
+# TYPE process_open_fds gauge
+process_open_fds 10.0
+# HELP process_max_fds Maximum number of open file descriptors.
+# TYPE process_max_fds gauge
+process_max_fds 1.048576e+06
+# HELP drift_output_path_info Path used to store drift visualizations and metrics
+# TYPE drift_output_path_info gauge
+drift_output_path_info{path="/tmp/v_drift"} 1.0
+# HELP recommend_requests_total Requests
+# TYPE recommend_requests_total counter
+recommend_requests_total{status="500"} 21.0
+# HELP recommend_requests_created Requests
+# TYPE recommend_requests_created gauge
+recommend_requests_created{status="500"} 1.763590838942565e+09
+# HELP recommend_latency_seconds Latency
+# TYPE recommend_latency_seconds histogram
+recommend_latency_seconds_bucket{le="0.005"} 21.0
+recommend_latency_seconds_bucket{le="0.01"} 21.0
+recommend_latency_seconds_bucket{le="0.025"} 21.0
+recommend_latency_seconds_bucket{le="0.05"} 21.0
+recommend_latency_seconds_bucket{le="0.075"} 21.0
+recommend_latency_seconds_bucket{le="0.1"} 21.0
+recommend_latency_seconds_bucket{le="0.25"} 21.0
+recommend_latency_seconds_bucket{le="0.5"} 21.0
+recommend_latency_seconds_bucket{le="0.75"} 21.0
+recommend_latency_seconds_bucket{le="1.0"} 21.0
+recommend_latency_seconds_bucket{le="2.5"} 21.0
+recommend_latency_seconds_bucket{le="5.0"} 21.0
+recommend_latency_seconds_bucket{le="7.5"} 21.0
+recommend_latency_seconds_bucket{le="10.0"} 21.0
+recommend_latency_seconds_bucket{le="+Inf"} 21.0
+recommend_latency_seconds_count 21.0
+recommend_latency_seconds_sum 0.0024597080191597342
+# HELP recommend_latency_seconds_created Latency
+# TYPE recommend_latency_seconds_created gauge
+recommend_latency_seconds_created 1.7635861318725016e+09
+# HELP model_version_info Current model version
+# TYPE model_version_info gauge
+model_version_info{data_snapshot="unknown",git_sha="unknown",model_name="als",version="v0.2"} 1.0
+model_version_info{data_snapshot="9c1de442",git_sha="207521e0",model_name="als",version="v0.3"} 1.0
+# HELP model_switches_total Model hot-swap operations
+# TYPE model_switches_total counter
+model_switches_total{from_version="v0.2",status="success",to_version="v0.3"} 1.0
+model_switches_total{from_version="v0.3",status="success",to_version="v0.2"} 1.0
+# HELP model_switches_created Model hot-swap operations
+# TYPE model_switches_created gauge
+model_switches_created{from_version="v0.2",status="success",to_version="v0.3"} 1.7635861595175278e+09
+model_switches_created{from_version="v0.3",status="success",to_version="v0.2"} 1.7635862408199096e+09
+# HELP data_drift_psi Population Stability Index
+# TYPE data_drift_psi gauge
+# HELP data_drift_kl Kullback-Leibler Divergence
+# TYPE data_drift_kl gauge
+# HELP data_missing_ratio Fraction of missing values
+# TYPE data_missing_ratio gauge
+# HELP data_outlier_fraction Fraction of outliers (z>3)
+# TYPE data_outlier_fraction gauge

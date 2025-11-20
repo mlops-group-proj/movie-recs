@@ -40,15 +40,15 @@ class ProportionTestResult:
 
     def to_dict(self) -> Dict:
         return {
-            "z_statistic": self.z_statistic,
-            "p_value": self.p_value,
-            "confidence_interval": [self.ci_lower, self.ci_upper],
-            "delta": self.delta,
-            "variant_a_rate": self.variant_a_rate,
-            "variant_b_rate": self.variant_b_rate,
-            "sample_size_a": self.sample_size_a,
-            "sample_size_b": self.sample_size_b,
-            "significant": self.significant,
+            "z_statistic": float(self.z_statistic),
+            "p_value": float(self.p_value),
+            "confidence_interval": [float(self.ci_lower), float(self.ci_upper)],
+            "delta": float(self.delta),
+            "variant_a_rate": float(self.variant_a_rate),
+            "variant_b_rate": float(self.variant_b_rate),
+            "sample_size_a": int(self.sample_size_a),
+            "sample_size_b": int(self.sample_size_b),
+            "significant": bool(self.significant),
         }
 
 
@@ -63,10 +63,10 @@ class BootstrapResult:
 
     def to_dict(self) -> Dict:
         return {
-            "delta_mean": self.delta_mean,
-            "confidence_interval": [self.ci_lower, self.ci_upper],
-            "ci_level": self.ci_level,
-            "n_bootstrap": self.n_bootstrap,
+            "delta_mean": float(self.delta_mean),
+            "confidence_interval": [float(self.ci_lower), float(self.ci_upper)],
+            "ci_level": float(self.ci_level),
+            "n_bootstrap": int(self.n_bootstrap),
         }
 
 

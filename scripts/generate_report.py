@@ -292,7 +292,7 @@ class ModelManager:
         self._lock = Lock()  # Thread-safe switching
 
     def switch(self, version):
-        """Switch active model version atomically."""
+        # Switch active model version atomically
         with self._lock:
             previous = self.current_version
             self._activate(model_name, version)
