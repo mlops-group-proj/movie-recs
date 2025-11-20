@@ -14,7 +14,7 @@ def load_meta(path):
         with open(path) as f:
             return json.load(f)
     except Exception as e:
-        print(f"⚠️  Skipping {path}: {e}")
+        print(f"!!  Skipping {path}: {e}")
         return None
 
 
@@ -26,7 +26,7 @@ def load_latency():
             with open(lat_path) as f:
                 return json.load(f)
         except Exception as e:
-            print(f"⚠️  Could not read latency file: {e}")
+            print(f"!!  Could not read latency file: {e}")
     return {}
 
 
@@ -51,7 +51,7 @@ def main():
             rows.append(row)
 
     if not rows:
-        print("❌ No meta.json files found in model_registry/")
+        print("XX No meta.json files found in model_registry/")
         return
 
     df = pd.DataFrame(rows)
@@ -74,19 +74,19 @@ def main():
     # Save to CSV
     out_csv = REPORTS / "model_comparison.csv"
     df.to_csv(out_csv, index=False)
-    print(f"\n✅ Saved CSV summary to {out_csv.resolve()}")
+    print(f"\n*  Saved CSV summary to {out_csv.resolve()}")
 
     # Save to Markdown
     out_md = REPORTS / "model_comparison.md"
     md = [
-        "# 📊 Model Comparison Summary\n",
+        "# *  Model Comparison Summary\n",
         "This table combines model accuracy, training cost, and inference latency.\n",
         "Generated automatically by `compare.py`.\n",
         "",
         df.to_markdown(index=False),
     ]
     out_md.write_text("\n".join(md))
-    print(f"✅ Saved Markdown summary to {out_md.resolve()}\n")
+    print(f"*  Saved Markdown summary to {out_md.resolve()}\n")
 
 
 if __name__ == "__main__":

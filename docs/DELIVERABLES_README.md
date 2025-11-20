@@ -95,10 +95,10 @@ Request Metrics:
 SLO Compliance:
   Required:            ≥70%
   Actual:              96.49%
-  Status:              ✅ PASS
+  Status:              *  PASS
   Margin:              +26.49 percentage points
 
-🎉 The API meets the ≥70% availability requirement!
+*  The API meets the ≥70% availability requirement!
 ```
 
 #### Exit Codes
@@ -156,9 +156,9 @@ Best 7-Day Window:
 Requirement Check:
   Required:  ≥2 updates within 7 days
   Actual:    3 updates
-  Status:    ✅ PASS
+  Status:    *  PASS
 
-🎉 The system meets the model update requirement!
+*  The system meets the model update requirement!
 ```
 
 #### Exit Codes
@@ -476,7 +476,7 @@ Before submitting, verify:
 - [ ] Documentation complete (check `docs/`)
 - [ ] Git history captured (check `evidence/git_history/`)
 - [ ] Logs collected (check `evidence/logs/`)
-- [ ] `DELIVERABLES_CHECKLIST.txt` shows all items ✅
+- [ ] `DELIVERABLES_CHECKLIST.txt` shows all items * 
 
 ---
 

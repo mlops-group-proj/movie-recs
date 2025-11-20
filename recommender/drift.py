@@ -36,9 +36,9 @@ try:
         f.write("ok")
     testfile.unlink()
     OUT = DEFAULT_OUT
-    logging.info(f"✅ Drift output directory set to {OUT}")
+    logging.info(f"*  Drift output directory set to {OUT}")
 except Exception as e:
-    logging.warning(f"⚠️ Drift output not writable at {DEFAULT_OUT} ({e}). Using fallback {FALLBACK_OUT}")
+    logging.warning(f"!! Drift output not writable at {DEFAULT_OUT} ({e}). Using fallback {FALLBACK_OUT}")
     FALLBACK_OUT.mkdir(parents=True, exist_ok=True)
     OUT = FALLBACK_OUT
 
@@ -57,9 +57,9 @@ try:
     else:
         drift_path_metric = REGISTRY._names_to_collectors["drift_output_path_info"]
     drift_path_metric.labels(path=str(OUT)).set(1)
-    logging.info(f"📊 Exposed Prometheus metric for drift path: {OUT}")
+    logging.info(f"*  Exposed Prometheus metric for drift path: {OUT}")
 except Exception as e:
-    logging.warning(f"⚠️ Could not register drift path metric: {e}")
+    logging.warning(f"!! Could not register drift path metric: {e}")
 
 # --------------------------------------------------------------------
 # Cleanup: keep only the most recent N drift runs
@@ -77,7 +77,7 @@ try:
             f.unlink()
             logging.info(f"🧹 Removed old drift plot: {f.name}")
 except Exception as e:
-    logging.warning(f"⚠️ Drift cleanup failed: {e}")
+    logging.warning(f"!! Drift cleanup failed: {e}")
 
 
 # --------------------------------------------------------------------

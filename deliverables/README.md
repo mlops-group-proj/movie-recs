@@ -9,13 +9,13 @@
 
 This package contains all deliverables for the MLOps Movie Recommender System project, demonstrating a complete production-grade machine learning system with:
 
-- ✅ End-to-end training pipeline
-- ✅ Production API service
-- ✅ Hot-swappable model versions
-- ✅ Comprehensive monitoring and SLOs
-- ✅ A/B testing with statistical analysis
-- ✅ Complete provenance tracking
-- ✅ High availability (≥70%)
+- *  End-to-end training pipeline
+- *  Production API service
+- *  Hot-swappable model versions
+- *  Comprehensive monitoring and SLOs
+- *  A/B testing with statistical analysis
+- *  Complete provenance tracking
+- *  High availability (≥70%)
 
 ---
 
@@ -73,7 +73,7 @@ deliverables/
 
 ## Deliverables Summary
 
-### 1. Training Pipeline ✅
+### 1. Training Pipeline * 
 
 **Evidence**: `model_registry/`, `code_samples/recommender/als.py`
 
@@ -88,7 +88,7 @@ Complete end-to-end training pipeline that:
 - Metadata tracking (hyperparameters, metrics, timestamps)
 - Reproducible builds with data snapshots
 
-### 2. API Service ✅
+### 2. API Service * 
 
 **Evidence**: `api_samples/recommend_sample.json`, `code_samples/service/app.py`
 
@@ -103,7 +103,7 @@ Production HTTP service with:
 - P95 latency: <100ms (SLO target)
 - Availability: ≥70% (meets requirement)
 
-### 3. Model Hot-Swap ✅
+### 3. Model Hot-Swap * 
 
 **Evidence**: `model_updates/model_updates_verification.json`
 
@@ -113,9 +113,9 @@ Zero-downtime model version switching:
 - Instant rollback capability
 - Thread-safe model cache
 
-**Verification**: ≥2 model updates within 7-day window ✅
+**Verification**: ≥2 model updates within 7-day window * 
 
-### 4. Monitoring ✅
+### 4. Monitoring * 
 
 **Evidence**: `api_samples/metrics.txt`, `availability/`
 
@@ -131,10 +131,10 @@ Comprehensive monitoring infrastructure:
   - Data drift (PSI, KL divergence)
 
 **Availability**:
-- 72h before submission: ≥70% ✅
-- 144h after submission: ≥70% ✅
+- 72h before submission: ≥70% * 
+- 144h after submission: ≥70% * 
 
-### 5. Experimentation (A/B Testing) ✅
+### 5. Experimentation (A/B Testing) * 
 
 **Evidence**: `docs/AB_TESTING_GUIDE.md`, `code_samples/service/ab_analysis.py`
 
@@ -152,7 +152,7 @@ Complete A/B testing framework:
 - Practical significance checks
 - Automated reports
 
-### 6. Provenance ✅
+### 6. Provenance * 
 
 **Evidence**: `api_samples/recommend_with_provenance.json`, `api_samples/trace_sample.json`
 
@@ -167,7 +167,7 @@ Complete lineage tracking for every prediction:
 
 **Avro Schema**: Updated `reco_response.avsc` with all provenance fields
 
-### 7. Availability Window ✅
+### 7. Availability Window * 
 
 **Evidence**: `availability/availability_72h.json`, `availability/availability_144h.json`
 
@@ -181,7 +181,7 @@ Complete lineage tracking for every prediction:
 
 **Calculation**: `Availability = (Successful Requests / Total Requests) * 100`
 
-### 8. Model Updates ✅
+### 8. Model Updates * 
 
 **Evidence**: `model_updates/model_updates_verification.json`
 

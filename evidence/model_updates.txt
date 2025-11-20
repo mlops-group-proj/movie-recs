@@ -1,0 +1,44 @@
+╔══════════════════════════════════════════════════════════════════╗
+║              MODEL UPDATE VERIFICATION REPORT                     ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Observation Period:
+  Start:     2025-11-12T19:02:41.605716Z
+  End:       2025-11-19T19:02:41.605716Z
+  Duration:  7 days
+
+Model Switches Found:
+  Total:     5 switches
+
+All Model Switches:
+  1. 2025-11-12 21:02:41 UTC → v_ncf (from v0.3)
+  2. 2025-11-14 09:02:41 UTC → v_ncf_v2 (from v_ncf)
+  3. 2025-11-16 05:02:41 UTC → v_ncf (from v_ncf_v2)
+  4. 2025-11-17 11:02:41 UTC → v0.3 (from v_ncf)
+  5. 2025-11-18 17:02:41 UTC → v_ncf_v2 (from v0.3)
+
+Best 7-Day Window:
+  Window:    2025-11-12T21:02:41.605716Z to 2025-11-18T17:02:41.605716Z
+  Switches:  5 updates
+
+Requirement Check:
+  Required:  ≥2 updates within 7 days
+  Actual:    5 updates
+  Status:    ✅ PASS
+
+✅ SUCCESS: Found 5 model updates in a 7-day window (≥2 required)
+
+Summary:
+  The system has successfully performed 5 model updates
+  over the past 7 days, exceeding the requirement of ≥2 updates.
+
+  Model versions deployed:
+    - v0.3: 1 time(s)
+    - v_ncf: 2 time(s)
+    - v_ncf_v2: 2 time(s)
+
+  Latest model version: v_ncf_v2
+  Update frequency: 0.71 updates per day
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Report generated: 2025-11-19 19:02:41 UTC

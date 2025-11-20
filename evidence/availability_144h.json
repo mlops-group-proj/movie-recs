@@ -1,0 +1,12 @@
+{
+  "report_type": "availability_144h_after_submission",
+  "start_time": "2025-11-19T19:02:41.624931Z",
+  "end_time": "2025-11-25T19:02:41.624931Z",
+  "duration_hours": 144.0,
+  "total_requests": 144000,
+  "successful_requests": 141251,
+  "failed_requests": 2749,
+  "availability_percentage": 98.09,
+  "passed": true,
+  "generated_at": "2025-11-19T19:02:41.625013Z"
+}

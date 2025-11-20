@@ -28,11 +28,11 @@ The Movie Recommender System implements comprehensive provenance logging to trac
 
 ### Key Features
 
-✅ **Automatic Request ID injection** via middleware
-✅ **Complete provenance metadata** in every response
-✅ **Structured logging** with full context
-✅ **Trace storage and retrieval** via `/trace` endpoint
-✅ **Avro schema compliance** for stream processing
+*  **Automatic Request ID injection** via middleware
+*  **Complete provenance metadata** in every response
+*  **Structured logging** with full context
+*  **Trace storage and retrieval** via `/trace` endpoint
+*  **Avro schema compliance** for stream processing
 
 ---
 

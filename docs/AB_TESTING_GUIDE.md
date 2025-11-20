@@ -208,12 +208,12 @@ python scripts/ab_report.py --time-window 120
 
 The system automatically recommends one of four decisions:
 
-### 1. ✅ Ship Variant B
+### 1. *  Ship Variant B
 
 **Criteria**:
-- Sample size ≥ 1,000 per variant ✅
-- P-value < 0.05 (statistically significant) ✅
-- Effect size > 1 percentage point (practically significant) ✅
+- Sample size ≥ 1,000 per variant * 
+- P-value < 0.05 (statistically significant) * 
+- Effect size > 1 percentage point (practically significant) * 
 - Variant B performs **better** than Variant A
 
 **Action**:
@@ -226,12 +226,12 @@ curl -X POST "http://localhost:8080/rollout/update?strategy=fixed"
 echo "MODEL_VERSION=v0.3" >> .env
 ```
 
-### 2. ✅ Keep Variant A
+### 2. *  Keep Variant A
 
 **Criteria**:
-- Sample size ≥ 1,000 per variant ✅
-- P-value < 0.05 ✅
-- Effect size > 1pp ✅
+- Sample size ≥ 1,000 per variant * 
+- P-value < 0.05 * 
+- Effect size > 1pp * 
 - Variant A performs **better** than Variant B
 
 **Action**:
@@ -243,7 +243,7 @@ curl -X POST "http://localhost:8080/rollout/update?strategy=fixed"
 ### 3. ⚖️ No Difference
 
 **Criteria**:
-- Sample size sufficient ✅
+- Sample size sufficient * 
 - P-value ≥ 0.05 (not statistically significant) OR
 - Effect size ≤ 1 percentage point (too small to matter)
 
@@ -254,7 +254,7 @@ curl -X POST "http://localhost:8080/rollout/update?strategy=fixed"
 ### 4. ⏳ Inconclusive
 
 **Criteria**:
-- Sample size < 1,000 per variant ❌
+- Sample size < 1,000 per variant XX
 
 **Action**:
 ```bash
@@ -309,34 +309,34 @@ where `SE = sqrt(p_pooled * (1 - p_pooled) * (1/n_A + 1/n_B))`
 
 ### 1. Sample Size Planning
 
-✅ **Always calculate required sample size** before starting
+*  **Always calculate required sample size** before starting
 ```python
 from service.ab_analysis import calculate_sample_size
 n = calculate_sample_size(baseline_rate=0.85, mde=0.02)
 ```
 
-❌ Don't run experiments with insufficient data
+XX Don't run experiments with insufficient data
 
 ### 2. Experiment Duration
 
-✅ **Run for multiple days** to account for:
+*  **Run for multiple days** to account for:
 - Day-of-week effects
 - Time-of-day variations
 - User behavior changes
 
-❌ Don't make decisions based on <24 hours of data
+XX Don't make decisions based on <24 hours of data
 
 ### 3. Multiple Testing Correction
 
-✅ **Decide on primary metric beforehand**
+*  **Decide on primary metric beforehand**
 - Primary: Success rate (gating decision)
 - Secondary: Latency, error rate (guardrail metrics)
 
-❌ Don't cherry-pick metrics post-hoc
+XX Don't cherry-pick metrics post-hoc
 
 ### 4. Guardrail Metrics
 
-✅ **Monitor secondary metrics** even if not used for decision:
+*  **Monitor secondary metrics** even if not used for decision:
 ```json
 "latency_comparison": {
   "delta_ms": +5.2,
@@ -344,21 +344,21 @@ n = calculate_sample_size(baseline_rate=0.85, mde=0.02)
 }
 ```
 
-❌ Don't ignore significant latency regressions
+XX Don't ignore significant latency regressions
 
 ### 5. Rollback Plan
 
-✅ **Always have a rollback ready**:
+*  **Always have a rollback ready**:
 ```bash
 # Instant rollback to previous version
 curl "http://localhost:8080/switch?model=v0.2"
 ```
 
-❌ Don't ship without ability to revert
+XX Don't ship without ability to revert
 
 ### 6. Documentation
 
-✅ **Document every experiment**:
+*  **Document every experiment**:
 - Hypothesis
 - Metrics chosen
 - Sample size calculation

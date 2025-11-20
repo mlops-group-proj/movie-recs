@@ -68,7 +68,7 @@ def query_prometheus(
         data = resp.json()
 
         if data["status"] != "success":
-            print(f"⚠️  Prometheus query failed: {data}", file=sys.stderr)
+            print(f"!!  Prometheus query failed: {data}", file=sys.stderr)
             return 0.0
 
         result = data.get("data", {}).get("result", [])
@@ -87,7 +87,7 @@ def query_prometheus(
         return 0.0
 
     except requests.RequestException as e:
-        print(f"❌ Failed to query Prometheus: {e}", file=sys.stderr)
+        print(f"XX Failed to query Prometheus: {e}", file=sys.stderr)
         return 0.0
 
 
@@ -115,8 +115,8 @@ def calculate_availability(
 
     time_range = f"{int((end_time - start_time).total_seconds())}s"
 
-    print(f"📊 Calculating availability from {start_time} to {end_time}")
-    print(f"⏰ Time window: {time_range}\n")
+    print(f"*  Calculating availability from {start_time} to {end_time}")
+    print(f"*Time window: {time_range}\n")
 
     # Query total requests
     query_total = f'sum(increase(recommend_requests_total[{time_range}]))'
@@ -133,7 +133,7 @@ def calculate_availability(
     # Calculate availability
     if total_requests == 0:
         availability_pct = 0.0
-        print("⚠️  No requests found in the time window!")
+        print("!!  No requests found in the time window!")
     else:
         availability_pct = (success_requests / total_requests) * 100
 
@@ -197,15 +197,15 @@ Additional Metrics:
 SLO Compliance:
   Required:            ≥{slo['required_availability']:.0f}%
   Actual:              {slo['actual_availability']:.2f}%
-  Status:              {'✅ PASS' if slo['meets_requirement'] else '❌ FAIL'}
+  Status:              {'*  PASS' if slo['meets_requirement'] else 'XX FAIL'}
   Margin:              {slo['margin']:+.2f} percentage points
 
 """
 
     if slo['meets_requirement']:
-        report += "🎉 The API meets the ≥70% availability requirement!\n"
+        report += "*  The API meets the ≥70% availability requirement!\n"
     else:
-        report += "⚠️  WARNING: The API does NOT meet the 70% availability requirement.\n"
+        report += "!!  WARNING: The API does NOT meet the 70% availability requirement.\n"
 
     return report
 
@@ -258,13 +258,13 @@ def main():
     end_time = None
     if args.start:
         if not args.end:
-            print("❌ Error: --end is required when using --start", file=sys.stderr)
+            print("XX Error: --end is required when using --start", file=sys.stderr)
             sys.exit(1)
         try:
             start_time = datetime.fromisoformat(args.start.replace("Z", ""))
             end_time = datetime.fromisoformat(args.end.replace("Z", ""))
         except ValueError as e:
-            print(f"❌ Error parsing time: {e}", file=sys.stderr)
+            print(f"XX Error parsing time: {e}", file=sys.stderr)
             sys.exit(1)
 
     # Calculate availability
@@ -276,7 +276,7 @@ def main():
             end_time=end_time
         )
     except Exception as e:
-        print(f"❌ Error calculating availability: {e}", file=sys.stderr)
+        print(f"XX Error calculating availability: {e}", file=sys.stderr)
         sys.exit(1)
 
     # Format output
@@ -289,7 +289,7 @@ def main():
     if args.output:
         with open(args.output, "w") as f:
             f.write(output)
-        print(f"✅ Report saved to: {args.output}")
+        print(f"*  Report saved to: {args.output}")
     else:
         print(output)
 

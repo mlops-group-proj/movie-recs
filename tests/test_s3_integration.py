@@ -36,11 +36,11 @@ def test_s3_write():
     print(f"  AWS_REGION: {aws_region}")
     
     if not use_s3:
-        print("\n❌ USE_S3 is not set to true in .env file")
+        print("\nXX USE_S3 is not set to true in .env file")
         return False
     
     if not s3_bucket:
-        print("\n❌ S3_BUCKET is not set in .env file")
+        print("\nXX S3_BUCKET is not set in .env file")
         return False
     
     print("\n" + "-" * 60)
@@ -55,7 +55,7 @@ def test_s3_write():
             flush_interval_sec=300,
         )
         
-        print(f"\n✅ StreamIngestor initialized successfully")
+        print(f"\n*  StreamIngestor initialized successfully")
         print(f"   S3 Client: {'Enabled' if ingestor.s3_client else 'Disabled'}")
         
         # Create test data
@@ -90,7 +90,7 @@ def test_s3_write():
         
         ingestor._write_batch_to_parquet("watch", test_batch)
         
-        print("\n✅ Test batch written successfully!")
+        print("\n*  Test batch written successfully!")
         
         # Verify the file exists in S3
         print("\n" + "-" * 60)
@@ -110,14 +110,14 @@ def test_s3_write():
         )
         
         if 'Contents' in response:
-            print(f"\n✅ Found {len(response['Contents'])} file(s) in S3:")
+            print(f"\n*  Found {len(response['Contents'])} file(s) in S3:")
             for obj in response['Contents']:
                 print(f"   - {obj['Key']} ({obj['Size']} bytes)")
         else:
-            print(f"\n⚠️  No files found at s3://{s3_bucket}/{prefix}")
+            print(f"\n!!  No files found at s3://{s3_bucket}/{prefix}")
         
         print("\n" + "=" * 60)
-        print("✅ S3 INTEGRATION TEST PASSED!")
+        print("*  S3 INTEGRATION TEST PASSED!")
         print("=" * 60)
         print(f"\nYour parquets will be written to:")
         print(f"  s3://{s3_bucket}/{s3_prefix}/{{topic}}/{{date}}/batch_*.parquet")
@@ -126,7 +126,7 @@ def test_s3_write():
         return True
         
     except Exception as e:
-        print(f"\n❌ TEST FAILED: {e}")
+        print(f"\nXX TEST FAILED: {e}")
         import traceback
         traceback.print_exc()
         return False

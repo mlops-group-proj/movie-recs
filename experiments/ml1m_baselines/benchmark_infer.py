@@ -120,7 +120,7 @@ def main():
 
     out_path = OUT / "benchmark_latency.json"
     out_path.write_text(json.dumps(results, indent=2))
-    print(f"\n✅ Saved latency results to {out_path.resolve()}\n")
+    print(f"\n*  Saved latency results to {out_path.resolve()}\n")
 
 
 # ---------------------------------------------------------------------

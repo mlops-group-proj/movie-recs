@@ -22,7 +22,7 @@ def fetch_experiment_analysis(api_url: str, time_window: int) -> dict:
         response.raise_for_status()
         return response.json()
     except requests.RequestException as e:
-        print(f"❌ Failed to fetch experiment analysis: {e}")
+        print(f"XX Failed to fetch experiment analysis: {e}")
         exit(1)
 
 
@@ -37,7 +37,7 @@ def generate_markdown_report(data: dict, time_window: int) -> str:
 **Generated**: {timestamp}
 **Time Window**: {time_window} minutes
 
-## ⚠️ Status: Insufficient Data
+## !! Status: Insufficient Data
 
 {data.get('message', 'No data available')}
 
@@ -61,7 +61,7 @@ def generate_markdown_report(data: dict, time_window: int) -> str:
 
     # Decision emoji
     decision_emoji = {
-        "ship_variant_a": "✅",
+        "ship_variant_a": "* ",
         "ship_variant_b": "🚀",
         "no_difference": "⚖️",
         "inconclusive": "⏳"
@@ -118,7 +118,7 @@ def generate_markdown_report(data: dict, time_window: int) -> str:
 |-----------|-------|
 | **Z-statistic** | {test_results.get('z_statistic', 0):.4f} |
 | **P-value** | {test_results.get('p_value', 0):.6f} |
-| **Significant?** | {'✅ Yes' if test_results.get('significant', False) else '❌ No'} (α=0.05) |
+| **Significant?** | {'*  Yes' if test_results.get('significant', False) else 'XX No'} (α=0.05) |
 | **Effect Size** | {test_results.get('delta', 0):.4f} ({test_results.get('delta', 0)*100:.2f} percentage points) |
 | **95% CI** | [{test_results.get('ci_lower', 0):.4f}, {test_results.get('ci_upper', 0):.4f}] |
 
@@ -134,14 +134,14 @@ def generate_markdown_report(data: dict, time_window: int) -> str:
 The decision was made based on:
 
 1. **Sample Size**: Minimum 1,000 samples per variant required
-   - Variant A: {variant_a.get('requests', 0):,} samples {'✅' if variant_a.get('requests', 0) >= 1000 else '❌'}
-   - Variant B: {variant_b.get('requests', 0):,} samples {'✅' if variant_b.get('requests', 0) >= 1000 else '❌'}
+   - Variant A: {variant_a.get('requests', 0):,} samples {'* ' if variant_a.get('requests', 0) >= 1000 else 'XX'}
+   - Variant B: {variant_b.get('requests', 0):,} samples {'* ' if variant_b.get('requests', 0) >= 1000 else 'XX'}
 
 2. **Statistical Significance**: P-value < 0.05
-   - P-value: {test_results.get('p_value', 0):.6f} {'✅' if test_results.get('p_value', 0) < 0.05 else '❌'}
+   - P-value: {test_results.get('p_value', 0):.6f} {'* ' if test_results.get('p_value', 0) < 0.05 else 'XX'}
 
 3. **Practical Significance**: |Effect Size| > 1 percentage point
-   - Effect: {abs(test_results.get('delta', 0))*100:.2f}pp {'✅' if abs(test_results.get('delta', 0)) > 0.01 else '❌'}
+   - Effect: {abs(test_results.get('delta', 0))*100:.2f}pp {'* ' if abs(test_results.get('delta', 0)) > 0.01 else 'XX'}
 
 ---
 
@@ -150,13 +150,13 @@ The decision was made based on:
 """
     # Add next steps based on decision
     if decision == "ship_variant_b":
-        report += """1. ✅ **Ship Variant B** to 100% of traffic
+        report += """1. *  **Ship Variant B** to 100% of traffic
 2. Update `MODEL_VERSION` environment variable to Variant B version
 3. Monitor metrics for 24-48 hours post-rollout
 4. Update baseline metrics for future experiments
 """
     elif decision == "ship_variant_a":
-        report += """1. ✅ **Keep Variant A** (current production version)
+        report += """1. *  **Keep Variant A** (current production version)
 2. Do not proceed with Variant B rollout
 3. Investigate why Variant B underperformed
 4. Consider alternative approaches
@@ -214,7 +214,7 @@ def main():
     args = parser.parse_args()
 
     # Fetch analysis
-    print(f"📊 Fetching experiment analysis from {args.api_url}...")
+    print(f"*  Fetching experiment analysis from {args.api_url}...")
     data = fetch_experiment_analysis(args.api_url, args.time_window)
 
     # Generate report
@@ -234,7 +234,7 @@ def main():
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(report)
 
-    print(f"✅ Report saved to: {output_path}")
+    print(f"*  Report saved to: {output_path}")
     print(f"\n{'='*60}")
     print(report)
     print(f"{'='*60}\n")

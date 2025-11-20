@@ -12,13 +12,13 @@
 
 This report demonstrates a complete production-grade MLOps system for movie recommendations, featuring:
 
-- ✅ **Containerized Deployment**: Multi-stage Docker with optimized images
-- ✅ **Automated Retraining**: Scheduled model training with versioned artifacts
-- ✅ **Hot-Swap Capability**: Zero-downtime model version switching
-- ✅ **Comprehensive Monitoring**: Prometheus + Grafana with SLO tracking
-- ✅ **A/B Testing**: Statistical experimentation framework
-- ✅ **Complete Provenance**: Full traceability for every prediction
-- ✅ **High Availability**: ≥70% uptime during required windows
+- *  **Containerized Deployment**: Multi-stage Docker with optimized images
+- *  **Automated Retraining**: Scheduled model training with versioned artifacts
+- *  **Hot-Swap Capability**: Zero-downtime model version switching
+- *  **Comprehensive Monitoring**: Prometheus + Grafana with SLO tracking
+- *  **A/B Testing**: Statistical experimentation framework
+- *  **Complete Provenance**: Full traceability for every prediction
+- *  **High Availability**: ≥70% uptime during required windows
 
 All deliverables have been met and verified with evidence included in this report.
 
@@ -308,7 +308,7 @@ Model Switches Found: 3 switches
 3. [2025-11-17T09:15:42Z] v0.2 → v0.3
 
 Best 7-Day Window: 3 updates
-Status: ✅ PASS (≥2 required)
+Status: *  PASS (≥2 required)
 ```
 
 ### Evidence
@@ -797,9 +797,9 @@ diff pred_current.json pred_v0.2.json
 
 ### Requirements
 
-- ✅ **≥70% availability** during 72h before submission
-- ✅ **≥70% availability** during 144h after submission
-- ✅ **≥2 model updates** within same 7-day window
+- *  **≥70% availability** during 72h before submission
+- *  **≥70% availability** during 144h after submission
+- *  **≥2 model updates** within same 7-day window
 
 ### Availability Calculation
 
@@ -847,10 +847,10 @@ Additional Metrics:
 SLO Compliance:
   Required:            ≥70%
   Actual:              96.49%
-  Status:              ✅ PASS
+  Status:              *  PASS
   Margin:              +26.49 percentage points
 
-🎉 The API meets the ≥70% availability requirement!
+*  The API meets the ≥70% availability requirement!
 ```
 
 ### 144-Hour Window (After Submission)
@@ -873,7 +873,7 @@ Request Metrics:
   Successful (200):    [TO BE MEASURED]
   Availability:        [TO BE MEASURED]
 
-Status:                [✅ PASS if ≥70%]
+Status:                [*  PASS if ≥70%]
 ```
 
 ### Model Updates Verification
@@ -915,9 +915,9 @@ Switches in Best Window:
 Requirement Check:
   Required:  ≥2 updates within 7 days
   Actual:    3 updates
-  Status:    ✅ PASS
+  Status:    *  PASS
 
-🎉 The system meets the model update requirement!
+*  The system meets the model update requirement!
 ```
 
 ### Evidence
@@ -949,10 +949,10 @@ deliverables/
 ├── DELIVERABLES_CHECKLIST.txt         # All deliverables verified
 ├── evidence/
 │   ├── availability/                  # Availability calculations
-│   │   ├── availability_72h.json      # ✅ 96.49% (≥70%)
-│   │   └── availability_144h.json     # ✅ [Post-submission]
+│   │   ├── availability_72h.json      # *  96.49% (≥70%)
+│   │   └── availability_144h.json     # *  [Post-submission]
 │   ├── model_updates/                 # Model update verification
-│   │   └── model_updates_verification.json  # ✅ 3 updates
+│   │   └── model_updates_verification.json  # *  3 updates
 │   ├── api_samples/                   # Sample API responses
 │   │   ├── recommend_with_provenance.json
 │   │   ├── trace_sample.json
@@ -984,14 +984,14 @@ deliverables/
 
 | # | Deliverable | Status | Evidence |
 |---|-------------|--------|----------|
-| 1 | **Containerization** | ✅ | docker-compose.yml, Dockerfiles |
-| 2 | **Automated Retraining** | ✅ | model_registry/*, cron config |
-| 3 | **Hot-Swap** | ✅ | /switch endpoint, model_updates/ |
-| 4 | **Monitoring** | ✅ | /metrics, prometheus.yml, dashboards |
-| 5 | **A/B Testing** | ✅ | ab_analysis.py, experiment results |
-| 6 | **Provenance** | ✅ | API responses, trace endpoint, Avro schema |
-| 7 | **Availability ≥70%** | ✅ | availability_*.json (96.49%) |
-| 8 | **≥2 Model Updates** | ✅ | model_updates_verification.json (3 updates) |
+| 1 | **Containerization** | *  | docker-compose.yml, Dockerfiles |
+| 2 | **Automated Retraining** | *  | model_registry/*, cron config |
+| 3 | **Hot-Swap** | *  | /switch endpoint, model_updates/ |
+| 4 | **Monitoring** | *  | /metrics, prometheus.yml, dashboards |
+| 5 | **A/B Testing** | *  | ab_analysis.py, experiment results |
+| 6 | **Provenance** | *  | API responses, trace endpoint, Avro schema |
+| 7 | **Availability ≥70%** | *  | availability_*.json (96.49%) |
+| 8 | **≥2 Model Updates** | *  | model_updates_verification.json (3 updates) |
 
 ### Verification Commands
 
@@ -1030,11 +1030,11 @@ python scripts/package_deliverables.py --output deliverables/
 
 | Metric | Target | Actual | Status |
 |--------|--------|--------|--------|
-| Availability (72h) | ≥70% | 96.49% | ✅ PASS |
+| Availability (72h) | ≥70% | 96.49% | *  PASS |
 | Availability (144h) | ≥70% | [Post-submission] | ⏳ Pending |
-| Model Updates (7d) | ≥2 | 3 | ✅ PASS |
-| P95 Latency | <100ms | 87ms | ✅ PASS |
-| Error Rate | <1% | 0.35% | ✅ PASS |
+| Model Updates (7d) | ≥2 | 3 | *  PASS |
+| P95 Latency | <100ms | 87ms | *  PASS |
+| Error Rate | <1% | 0.35% | *  PASS |
 
 ---
 
@@ -1042,12 +1042,12 @@ python scripts/package_deliverables.py --output deliverables/
 
 This MLOps system demonstrates a complete production-grade machine learning deployment with:
 
-✅ **Automated Pipeline**: Continuous retraining with versioned artifacts
-✅ **Zero-Downtime**: Hot-swappable models without service restart
-✅ **Comprehensive Monitoring**: Full observability with Prometheus + Grafana
-✅ **Statistical Rigor**: Proper A/B testing with significance testing
-✅ **Complete Traceability**: Full provenance for every prediction
-✅ **High Reliability**: ≥96% availability during required windows
+*  **Automated Pipeline**: Continuous retraining with versioned artifacts
+*  **Zero-Downtime**: Hot-swappable models without service restart
+*  **Comprehensive Monitoring**: Full observability with Prometheus + Grafana
+*  **Statistical Rigor**: Proper A/B testing with significance testing
+*  **Complete Traceability**: Full provenance for every prediction
+*  **High Reliability**: ≥96% availability during required windows
 
 All requirements have been met and verified with concrete evidence.
 

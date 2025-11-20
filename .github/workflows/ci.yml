@@ -68,7 +68,7 @@ jobs:
     - name: Verify data files
       run: |
         echo "Verifying dataset contents:"
-        ls -lh data/ml1m_prepared || echo "⚠️ Dataset missing!"
+        ls -lh data/ml1m_prepared || echo "!! Dataset missing!"
 
     - name: Run offline evaluation (ItemCF)
       run: python experiments/ml1m_baselines/train_itemcf.py
@@ -126,7 +126,7 @@ jobs:
           --force-new-deployment \
           --desired-count 1 \
           --region "$AWS_REGION"
-        echo "✅ ECS service update triggered successfully."
+        echo "*  ECS service update triggered successfully."
 
     # ------------------------------------------------------------------
     # Report summary
@@ -134,7 +134,7 @@ jobs:
     - name: Summarize results
       run: |
         echo "### CI/CD Summary" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ Unit tests & coverage complete" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ Offline evaluation completed" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ Drift check passed (PSI < 0.25)" >> $GITHUB_STEP_SUMMARY
+        echo "- *  Unit tests & coverage complete" >> $GITHUB_STEP_SUMMARY
+        echo "- *  Offline evaluation completed" >> $GITHUB_STEP_SUMMARY
+        echo "- *  Drift check passed (PSI < 0.25)" >> $GITHUB_STEP_SUMMARY
         echo "- 🚀 Image deployed: ${{ steps.build-image.outputs.image }}" >> $GITHUB_STEP_SUMMARY

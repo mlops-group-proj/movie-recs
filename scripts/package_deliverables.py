@@ -42,9 +42,9 @@ def copy_documentation(output_dir: Path):
         if src.exists():
             dest = docs_dest / src.name
             shutil.copy2(src, dest)
-            print(f"  ✅ Copied {doc_file}")
+            print(f"  *  Copied {doc_file}")
         else:
-            print(f"  ⚠️  Not found: {doc_file}")
+            print(f"  !!  Not found: {doc_file}")
 
 
 def copy_code_samples(output_dir: Path):
@@ -74,12 +74,12 @@ def copy_code_samples(output_dir: Path):
             dest = code_dest / src
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, dest)
-            print(f"  ✅ Copied {code_file}")
+            print(f"  *  Copied {code_file}")
 
 
 def create_deliverables_checklist(output_dir: Path):
     """Create a checklist of all deliverables."""
-    print("\n✅ Creating Deliverables Checklist...")
+    print("\n*  Creating Deliverables Checklist...")
 
     checklist = {
         "submission_date": datetime.utcnow().isoformat() + "Z",
@@ -93,7 +93,7 @@ def create_deliverables_checklist(output_dir: Path):
                     "git_history/commits.txt",
                     "code_samples/recommender/als.py"
                 ],
-                "status": "✅ Complete"
+                "status": "*  Complete"
             },
             {
                 "id": 2,
@@ -104,7 +104,7 @@ def create_deliverables_checklist(output_dir: Path):
                     "api_samples/healthz.json",
                     "code_samples/service/app.py"
                 ],
-                "status": "✅ Complete"
+                "status": "*  Complete"
             },
             {
                 "id": 3,
@@ -115,7 +115,7 @@ def create_deliverables_checklist(output_dir: Path):
                     "code_samples/service/loader.py",
                     "api_samples/rollout_status.json"
                 ],
-                "status": "✅ Complete"
+                "status": "*  Complete"
             },
             {
                 "id": 4,
@@ -126,7 +126,7 @@ def create_deliverables_checklist(output_dir: Path):
                     "code_samples/prometheus/prometheus.yml",
                     "availability/availability_*.json"
                 ],
-                "status": "✅ Complete"
+                "status": "*  Complete"
             },
             {
                 "id": 5,
@@ -137,7 +137,7 @@ def create_deliverables_checklist(output_dir: Path):
                     "code_samples/service/ab_analysis.py",
                     "api_samples/recommend_sample.json (variant field)"
                 ],
-                "status": "✅ Complete"
+                "status": "*  Complete"
             },
             {
                 "id": 6,
@@ -149,7 +149,7 @@ def create_deliverables_checklist(output_dir: Path):
                     "docs/PROVENANCE_GUIDE.md",
                     "code_samples/stream/schemas/reco_response.avsc"
                 ],
-                "status": "✅ Complete"
+                "status": "*  Complete"
             },
             {
                 "id": 7,
@@ -159,7 +159,7 @@ def create_deliverables_checklist(output_dir: Path):
                     "availability/availability_72h.json",
                     "availability/availability_144h.json"
                 ],
-                "status": "✅ Complete (verify after 144h)"
+                "status": "*  Complete (verify after 144h)"
             },
             {
                 "id": 8,
@@ -168,7 +168,7 @@ def create_deliverables_checklist(output_dir: Path):
                 "evidence": [
                     "model_updates/model_updates_verification.json"
                 ],
-                "status": "✅ Complete"
+                "status": "*  Complete"
             }
         ],
         "summary": {
@@ -207,12 +207,12 @@ Submission Date: {checklist['submission_date']}
 
 Summary: {checklist['summary']['completed']}/{checklist['summary']['total_deliverables']} Completed ({checklist['summary']['completion_percentage']:.0f}%)
 
-✅ All deliverables complete and ready for submission!
+*  All deliverables complete and ready for submission!
 """
 
     (output_dir / "DELIVERABLES_CHECKLIST.txt").write_text(checklist_text)
 
-    print("  ✅ Deliverables checklist created")
+    print("  *  Deliverables checklist created")
 
 
 def create_master_readme(output_dir: Path):
@@ -230,13 +230,13 @@ def create_master_readme(output_dir: Path):
 
 This package contains all deliverables for the MLOps Movie Recommender System project, demonstrating a complete production-grade machine learning system with:
 
-- ✅ End-to-end training pipeline
-- ✅ Production API service
-- ✅ Hot-swappable model versions
-- ✅ Comprehensive monitoring and SLOs
-- ✅ A/B testing with statistical analysis
-- ✅ Complete provenance tracking
-- ✅ High availability (≥70%)
+- *  End-to-end training pipeline
+- *  Production API service
+- *  Hot-swappable model versions
+- *  Comprehensive monitoring and SLOs
+- *  A/B testing with statistical analysis
+- *  Complete provenance tracking
+- *  High availability (≥70%)
 
 ---
 
@@ -294,7 +294,7 @@ deliverables/
 
 ## Deliverables Summary
 
-### 1. Training Pipeline ✅
+### 1. Training Pipeline * 
 
 **Evidence**: `model_registry/`, `code_samples/recommender/als.py`
 
@@ -309,7 +309,7 @@ Complete end-to-end training pipeline that:
 - Metadata tracking (hyperparameters, metrics, timestamps)
 - Reproducible builds with data snapshots
 
-### 2. API Service ✅
+### 2. API Service * 
 
 **Evidence**: `api_samples/recommend_sample.json`, `code_samples/service/app.py`
 
@@ -324,7 +324,7 @@ Production HTTP service with:
 - P95 latency: <100ms (SLO target)
 - Availability: ≥70% (meets requirement)
 
-### 3. Model Hot-Swap ✅
+### 3. Model Hot-Swap * 
 
 **Evidence**: `model_updates/model_updates_verification.json`
 
@@ -334,9 +334,9 @@ Zero-downtime model version switching:
 - Instant rollback capability
 - Thread-safe model cache
 
-**Verification**: ≥2 model updates within 7-day window ✅
+**Verification**: ≥2 model updates within 7-day window * 
 
-### 4. Monitoring ✅
+### 4. Monitoring * 
 
 **Evidence**: `api_samples/metrics.txt`, `availability/`
 
@@ -352,10 +352,10 @@ Comprehensive monitoring infrastructure:
   - Data drift (PSI, KL divergence)
 
 **Availability**:
-- 72h before submission: ≥70% ✅
-- 144h after submission: ≥70% ✅
+- 72h before submission: ≥70% * 
+- 144h after submission: ≥70% * 
 
-### 5. Experimentation (A/B Testing) ✅
+### 5. Experimentation (A/B Testing) * 
 
 **Evidence**: `docs/AB_TESTING_GUIDE.md`, `code_samples/service/ab_analysis.py`
 
@@ -373,7 +373,7 @@ Complete A/B testing framework:
 - Practical significance checks
 - Automated reports
 
-### 6. Provenance ✅
+### 6. Provenance * 
 
 **Evidence**: `api_samples/recommend_with_provenance.json`, `api_samples/trace_sample.json`
 
@@ -388,7 +388,7 @@ Complete lineage tracking for every prediction:
 
 **Avro Schema**: Updated `reco_response.avsc` with all provenance fields
 
-### 7. Availability Window ✅
+### 7. Availability Window * 
 
 **Evidence**: `availability/availability_72h.json`, `availability/availability_144h.json`
 
@@ -402,7 +402,7 @@ Complete lineage tracking for every prediction:
 
 **Calculation**: `Availability = (Successful Requests / Total Requests) * 100`
 
-### 8. Model Updates ✅
+### 8. Model Updates * 
 
 **Evidence**: `model_updates/model_updates_verification.json`
 
@@ -505,7 +505,7 @@ For questions or issues, please refer to:
 
     (output_dir / "README.md").write_text(readme_content)
 
-    print("  ✅ Master README created")
+    print("  *  Master README created")
 
 
 def main():
@@ -544,9 +544,9 @@ def main():
         if evidence_dest.exists():
             shutil.rmtree(evidence_dest)
         shutil.copytree(evidence_dir, evidence_dest)
-        print(f"  ✅ Evidence copied")
+        print(f"  *  Evidence copied")
     else:
-        print(f"  ⚠️  Evidence directory not found: {evidence_dir}")
+        print(f"  !!  Evidence directory not found: {evidence_dir}")
         print(f"     Run: python scripts/collect_evidence.py --output {evidence_dir}")
 
     # Copy documentation
@@ -562,7 +562,7 @@ def main():
     create_master_readme(output_dir)
 
     print("\n" + "=" * 70)
-    print("✅ Deliverables package complete!")
+    print("*  Deliverables package complete!")
     print(f"📁 Package location: {output_dir.absolute()}")
     print("\nNext steps:")
     print("  1. Review DELIVERABLES_CHECKLIST.txt")

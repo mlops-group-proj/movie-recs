@@ -95,7 +95,7 @@ def compute_drift_once():
     # Mark service as healthy
     HEALTH_STATUS.set(1)
 
-    logging.info("📊 Running drift check on startup...")
+    logging.info("*  Running drift check on startup...")
     try:
         results, _, _ = drift.run_drift(threshold=0.25)
         app.state.drift_results = results
@@ -104,9 +104,9 @@ def compute_drift_once():
             KL_G.labels(feature=feature).set(vals.get("kl_divergence", 0.0))
             MISS_G.labels(feature=feature).set(vals.get("missing_ratio", 0.0))
             OUTL_G.labels(feature=feature).set(vals.get("outlier_fraction", 0.0))
-        logging.info("✅ Drift metrics loaded successfully.")
+        logging.info("*  Drift metrics loaded successfully.")
     except Exception as e:
-        logging.exception(f"⚠️ Drift computation failed: {e}")
+        logging.exception(f"!! Drift computation failed: {e}")
 
     # Export model version info to Prometheus
     try:
@@ -120,9 +120,9 @@ def compute_drift_once():
             git_sha=git_sha,
             data_snapshot=data_snapshot
         ).set(1)
-        logging.info(f"✅ Model version info exported: {MODEL_VERSION} (git:{git_sha}, data:{data_snapshot})")
+        logging.info(f"*  Model version info exported: {MODEL_VERSION} (git:{git_sha}, data:{data_snapshot})")
     except Exception as e:
-        logging.warning(f"⚠️ Failed to export model version info: {e}")
+        logging.warning(f"!! Failed to export model version info: {e}")
 
 # ------------------------------------------------------------------
 # API Endpoints

@@ -163,7 +163,7 @@ def export_model(args: argparse.Namespace) -> str:
 
     (version_dir / "meta.json").write_text(json.dumps(manifest, indent=2))
     (registry / "latest.txt").write_text(version)
-    print(f"✅ Exported {args.model_name} -> {model_dir} ({version})")
+    print(f"*  Exported {args.model_name} -> {model_dir} ({version})")
     return version
 
 

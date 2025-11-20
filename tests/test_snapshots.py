@@ -100,7 +100,7 @@ class TestSnapshotGeneration:
             assert list(df["user_id"]) == list(range(1, 11))
             assert list(df["movie_id"]) == [i * 10 for i in range(1, 11)]
             
-            print(f"\n✅ Generated snapshot: {parquet_files[0]}")
+            print(f"\n*  Generated snapshot: {parquet_files[0]}")
             print(f"   Records: {len(df)}")
             print(f"   Size: {parquet_files[0].stat().st_size} bytes")
     
@@ -143,7 +143,7 @@ class TestSnapshotGeneration:
             
             assert len(all_data) == 6, f"Expected 6 total records, got {len(all_data)}"
             
-            print(f"\n✅ Generated {len(parquet_files)} snapshot(s)")
+            print(f"\n*  Generated {len(parquet_files)} snapshot(s)")
             for pf in parquet_files:
                 df = pd.read_parquet(pf)
                 print(f"   {pf.name}: {len(df)} records")
@@ -196,7 +196,7 @@ class TestSnapshotGeneration:
                 df = pd.read_parquet(parquet_files[0])
                 assert len(df) == 5, f"{topic} should have 5 records"
                 
-                print(f"\n✅ {topic}: {parquet_files[0]}")
+                print(f"\n*  {topic}: {parquet_files[0]}")
                 print(f"   Records: {len(df)}")
     
     def test_snapshot_date_partitioning(self, snapshot_dir, mock_kafka_env):
@@ -231,7 +231,7 @@ class TestSnapshotGeneration:
             today = datetime.now(UTC).strftime('%Y-%m-%d')
             assert date_dir_name == today, f"Expected {today}, got {date_dir_name}"
             
-            print(f"\n✅ Date partition: {date_dir_name}")
+            print(f"\n*  Date partition: {date_dir_name}")
     
     def test_snapshot_file_naming(self, snapshot_dir, mock_kafka_env):
         """Test that snapshot files have correct naming convention."""
@@ -260,7 +260,7 @@ class TestSnapshotGeneration:
             assert filename.endswith(".parquet")
             assert len(filename) == len("batch_20251024_120000.parquet")
             
-            print(f"\n✅ Snapshot filename: {filename}")
+            print(f"\n*  Snapshot filename: {filename}")
     
     def test_snapshot_readability(self, snapshot_dir, mock_kafka_env):
         """Test that generated snapshots can be read back correctly."""
@@ -300,7 +300,7 @@ class TestSnapshotGeneration:
             assert df["rating"].min() == 3.5
             assert df["rating"].max() == 8.0
             
-            print(f"\n✅ Snapshot readable with {len(df)} records")
+            print(f"\n*  Snapshot readable with {len(df)} records")
             print(f"   Columns: {list(df.columns)}")
             print(f"   Sample: {df.head(2).to_dict('records')}")
 
@@ -349,7 +349,7 @@ def test_snapshot_generation_manual():
             })
         ingestor._flush_batch("rate")
         
-        print(f"\n✅ Snapshots generated successfully!")
+        print(f"\n*  Snapshots generated successfully!")
         print(f"   Location: {Path(output_dir).absolute()}")
         
         # List generated files

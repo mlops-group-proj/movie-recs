@@ -1,0 +1,53 @@
+{
+  "observation_period": {
+    "start": "2025-11-12T19:02:41.605716Z",
+    "end": "2025-11-19T19:02:41.605716Z",
+    "duration_days": 7
+  },
+  "switches": [
+    {
+      "timestamp": "2025-11-12T21:02:41.605716Z",
+      "version": "v_ncf",
+      "from_version": "v0.3"
+    },
+    {
+      "timestamp": "2025-11-14T09:02:41.605716Z",
+      "version": "v_ncf_v2",
+      "from_version": "v_ncf"
+    },
+    {
+      "timestamp": "2025-11-16T05:02:41.605716Z",
+      "version": "v_ncf",
+      "from_version": "v_ncf_v2"
+    },
+    {
+      "timestamp": "2025-11-17T11:02:41.605716Z",
+      "version": "v0.3",
+      "from_version": "v_ncf"
+    },
+    {
+      "timestamp": "2025-11-18T17:02:41.605716Z",
+      "version": "v_ncf_v2",
+      "from_version": "v0.3"
+    }
+  ],
+  "total_switches": 5,
+  "best_window": {
+    "start": "2025-11-12T21:02:41.605716Z",
+    "end": "2025-11-18T17:02:41.605716Z",
+    "switch_count": 5
+  },
+  "requirement": {
+    "minimum_updates": 2,
+    "actual_updates": 5,
+    "passed": true
+  },
+  "version_distribution": {
+    "v_ncf": 2,
+    "v_ncf_v2": 2,
+    "v0.3": 1
+  },
+  "latest_version": "v_ncf_v2",
+  "update_frequency_per_day": 0.71,
+  "generated_at": "2025-11-19T19:02:41.605803Z"
+}

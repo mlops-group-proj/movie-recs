@@ -47,9 +47,9 @@ python scripts/quality_gate.py --gate unit-tests --gate schema-validation --verb
 **Purpose:** Ensures all unit tests pass before code can be merged.
 
 **Criteria:**
-- ✅ 100% pass rate required
-- ✅ 0 test failures allowed
-- ✅ All tests in `tests/` directory must execute
+- *  100% pass rate required
+- *  0 test failures allowed
+- *  All tests in `tests/` directory must execute
 
 **What it validates:**
 - Core functionality (StreamIngestor, schemas, consumer)
@@ -81,9 +81,9 @@ Threshold: ≥ 100% pass rate, ≤ 0 failures
 **Purpose:** Ensures Kafka message schemas are correctly defined and validated.
 
 **Criteria:**
-- ✅ 100% schema validation tests pass
-- ✅ All 4 schemas tested: watch, rate, reco_requests, reco_responses
-- ✅ Valid and invalid message handling verified
+- *  100% schema validation tests pass
+- *  All 4 schemas tested: watch, rate, reco_requests, reco_responses
+- *  Valid and invalid message handling verified
 
 **What it validates:**
 - Avro schema definitions (WATCH_SCHEMA, RATE_SCHEMA, etc.)
@@ -129,9 +129,9 @@ Threshold: 100% pass rate, all 4 schemas validated
 **Purpose:** Ensures system can handle high load without data loss.
 
 **Criteria:**
-- ✅ 100% backpressure tests pass
-- ✅ Minimum 5 test cases covering different scenarios
-- ✅ Zero data loss under load verified
+- *  100% backpressure tests pass
+- *  Minimum 5 test cases covering different scenarios
+- *  Zero data loss under load verified
 
 **What it validates:**
 - **Batch Size Flushing:** Automatic flush at 1000 messages
@@ -185,9 +185,9 @@ Each gate runs as a separate step:
 3. Backpressure Gate
 
 **Status Checks:**
-- ✅ All gates must pass to merge
-- ❌ Any gate failure blocks the PR
-- 📊 Results visible in GitHub Actions summary
+- *  All gates must pass to merge
+- XX Any gate failure blocks the PR
+- *  Results visible in GitHub Actions summary
 
 ### Local Pre-Commit Hook
 
@@ -200,7 +200,7 @@ chmod +x .git/hooks/pre-commit
 
 # Now gates run automatically on 'git commit'
 git commit -m "Your message"
-# 🔍 Running pre-commit quality gates...
+#   Running pre-commit quality gates...
 # ✓ All quality gates passed
 ```
 
@@ -365,8 +365,8 @@ Track metrics over time:
 
 | Code | Meaning |
 |------|---------|
-| 0 | All gates passed ✅ |
-| 1 | One or more gates failed ❌ |
+| 0 | All gates passed *  |
+| 1 | One or more gates failed XX |
 
 **Usage in CI:**
 ```bash
@@ -419,9 +419,9 @@ time python scripts/quality_gate.py --gate backpressure
 
 Quality gates ensure code quality through automated enforcement:
 
-✅ **Unit Tests Gate** - All tests pass (100%)  
-✅ **Schema Validation Gate** - All 4 Kafka schemas validated  
-✅ **Backpressure Gate** - System handles load without data loss  
+*  **Unit Tests Gate** - All tests pass (100%)  
+*  **Schema Validation Gate** - All 4 Kafka schemas validated  
+*  **Backpressure Gate** - System handles load without data loss  
 
 Run locally before every commit:
 ```bash

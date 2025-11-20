@@ -60,13 +60,13 @@ def query_prometheus_range(
         data = resp.json()
 
         if data["status"] != "success":
-            print(f"⚠️  Prometheus query failed: {data}", file=sys.stderr)
+            print(f"!!  Prometheus query failed: {data}", file=sys.stderr)
             return []
 
         return data.get("data", {}).get("result", [])
 
     except requests.RequestException as e:
-        print(f"❌ Failed to query Prometheus: {e}", file=sys.stderr)
+        print(f"XX Failed to query Prometheus: {e}", file=sys.stderr)
         return []
 
 
@@ -176,13 +176,13 @@ def verify_model_updates(
     Returns:
         Dictionary with verification results
     """
-    print(f"🔍 Searching for model updates from {start_time} to {end_time}\n")
+    print(f"  Searching for model updates from {start_time} to {end_time}\n")
 
     # Extract model switches
     switches = extract_model_switches(prom_url, start_time, end_time)
 
     if not switches:
-        print("⚠️  No model switch events found in Prometheus!")
+        print("!!  No model switch events found in Prometheus!")
         return {
             "observation_period": {
                 "start": start_time.isoformat() + "Z",
@@ -291,14 +291,14 @@ Model Switches Found:
     report += f"""Requirement Check:
   Required:  ≥{req['minimum_updates']} updates within {req['within_days']} days
   Actual:    {req['actual_updates']} updates
-  Status:    {'✅ PASS' if req['meets_requirement'] else '❌ FAIL'}
+  Status:    {'*  PASS' if req['meets_requirement'] else 'XX FAIL'}
 
 """
 
     if req['meets_requirement']:
-        report += "🎉 The system meets the model update requirement!\n"
+        report += "*  The system meets the model update requirement!\n"
     else:
-        report += f"⚠️  WARNING: Found only {req['actual_updates']} updates. Need ≥2 within 7 days.\n"
+        report += f"!!  WARNING: Found only {req['actual_updates']} updates. Need ≥2 within 7 days.\n"
 
     return report
 
@@ -345,21 +345,21 @@ def main():
         try:
             end_time = datetime.fromisoformat(args.end.replace("Z", ""))
         except ValueError as e:
-            print(f"❌ Error parsing --end: {e}", file=sys.stderr)
+            print(f"XX Error parsing --end: {e}", file=sys.stderr)
             sys.exit(1)
 
     if args.start:
         try:
             start_time = datetime.fromisoformat(args.start.replace("Z", ""))
         except ValueError as e:
-            print(f"❌ Error parsing --start: {e}", file=sys.stderr)
+            print(f"XX Error parsing --start: {e}", file=sys.stderr)
             sys.exit(1)
 
     # Verify model updates
     try:
         results = verify_model_updates(args.prometheus_url, start_time, end_time)
     except Exception as e:
-        print(f"❌ Error verifying model updates: {e}", file=sys.stderr)
+        print(f"XX Error verifying model updates: {e}", file=sys.stderr)
         sys.exit(1)
 
     # Format output
@@ -372,7 +372,7 @@ def main():
     if args.output:
         with open(args.output, "w") as f:
             f.write(output)
-        print(f"✅ Report saved to: {args.output}")
+        print(f"*  Report saved to: {args.output}")
     else:
         print(output)
 

@@ -6,7 +6,7 @@
 Submission Date: 2025-11-20T00:07:55.998514Z
 
 
-1. Training Pipeline - ✅ Complete
+1. Training Pipeline - *  Complete
    End-to-end pipeline producing versioned model artifacts
 
    Evidence:
@@ -14,7 +14,7 @@ Submission Date: 2025-11-20T00:07:55.998514Z
    - git_history/commits.txt
    - code_samples/recommender/als.py
 
-2. API Service - ✅ Complete
+2. API Service - *  Complete
    HTTP service with /recommend/{user_id} endpoint
 
    Evidence:
@@ -22,7 +22,7 @@ Submission Date: 2025-11-20T00:07:55.998514Z
    - api_samples/healthz.json
    - code_samples/service/app.py
 
-3. Model Hot-Swap - ✅ Complete
+3. Model Hot-Swap - *  Complete
    Switch model versions without restart
 
    Evidence:
@@ -30,7 +30,7 @@ Submission Date: 2025-11-20T00:07:55.998514Z
    - code_samples/service/loader.py
    - api_samples/rollout_status.json
 
-4. Monitoring - ✅ Complete
+4. Monitoring - *  Complete
    Metrics export with p95 latency, error rate, uptime
 
    Evidence:
@@ -38,7 +38,7 @@ Submission Date: 2025-11-20T00:07:55.998514Z
    - code_samples/prometheus/prometheus.yml
    - availability/availability_*.json
 
-5. Experimentation (A/B Testing) - ✅ Complete
+5. Experimentation (A/B Testing) - *  Complete
    A/B split with statistical testing
 
    Evidence:
@@ -46,7 +46,7 @@ Submission Date: 2025-11-20T00:07:55.998514Z
    - code_samples/service/ab_analysis.py
    - api_samples/recommend_sample.json (variant field)
 
-6. Provenance - ✅ Complete
+6. Provenance - *  Complete
    Log request_id, model_version, git_sha, data_snapshot_id, etc.
 
    Evidence:
@@ -55,14 +55,14 @@ Submission Date: 2025-11-20T00:07:55.998514Z
    - docs/PROVENANCE_GUIDE.md
    - code_samples/stream/schemas/reco_response.avsc
 
-7. Availability Window - ✅ Complete (verify after 144h)
+7. Availability Window - *  Complete (verify after 144h)
    ≥70% availability during 72h before and 144h after submission
 
    Evidence:
    - availability/availability_72h.json
    - availability/availability_144h.json
 
-8. Model Updates - ✅ Complete
+8. Model Updates - *  Complete
    ≥2 model updates within same 7-day window
 
    Evidence:
@@ -72,4 +72,4 @@ Submission Date: 2025-11-20T00:07:55.998514Z
 
 Summary: 8/8 Completed (100%)
 
-✅ All deliverables complete and ready for submission!
+*  All deliverables complete and ready for submission!

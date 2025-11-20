@@ -81,9 +81,9 @@ class TestBackpressureHandling:
             parquet_files = list(Path(self.test_dir).rglob("*.parquet"))
             assert len(parquet_files) > 0, "Parquet file should be created"
             
-            print(f"✅ Batch flushed successfully")
-            print(f"✅ Created parquet file: {parquet_files[0]}")
-            print(f"✅ Batch size after flush: {len(ingestor.batches['watch'])}")
+            print(f"*  Batch flushed successfully")
+            print(f"*  Created parquet file: {parquet_files[0]}")
+            print(f"*  Batch size after flush: {len(ingestor.batches['watch'])}")
     
     def test_time_based_flush(self):
         """Test that flush_interval_sec triggers automatic flush."""
@@ -131,9 +131,9 @@ class TestBackpressureHandling:
             parquet_files = list(Path(self.test_dir).rglob("*.parquet"))
             assert len(parquet_files) > 0, "Parquet file should be created"
             
-            print(f"✅ Time-based flush triggered successfully")
-            print(f"✅ Created parquet file: {parquet_files[0]}")
-            print(f"✅ Batch size after flush: {len(ingestor.batches['watch'])}")
+            print(f"*  Time-based flush triggered successfully")
+            print(f"*  Created parquet file: {parquet_files[0]}")
+            print(f"*  Batch size after flush: {len(ingestor.batches['watch'])}")
     
     def test_multiple_topics_under_load(self):
         """Test handling multiple topics with high message volume."""
@@ -205,12 +205,12 @@ class TestBackpressureHandling:
         
         # Verify parquet files were created for all topics
         parquet_files = list(Path(self.test_dir).rglob("*.parquet"))
-        print(f"\n✅ Created {len(parquet_files)} parquet files")
+        print(f"\n*  Created {len(parquet_files)} parquet files")
         for f in parquet_files:
             print(f"   - {f.relative_to(self.test_dir)}")
         
         assert len(parquet_files) >= len(topics), "Should have files for all topics"
-        print(f"✅ All topics handled successfully under load")
+        print(f"*  All topics handled successfully under load")
     
     def test_no_data_loss_during_backpressure(self):
         """Test that no messages are lost during high-load backpressure."""
@@ -276,15 +276,15 @@ class TestBackpressureHandling:
             if 'msg_id' in df.columns:
                 written_ids.extend(df['msg_id'].tolist())
         
-        print(f"\n✅ Total messages added: {total_messages}")
-        print(f"✅ Total messages written: {total_written}")
-        print(f"✅ Number of flushes: {flush_count}")
-        print(f"✅ Parquet files created: {len(parquet_files)}")
+        print(f"\n*  Total messages added: {total_messages}")
+        print(f"*  Total messages written: {total_written}")
+        print(f"*  Number of flushes: {flush_count}")
+        print(f"*  Parquet files created: {len(parquet_files)}")
         
         assert total_written == total_messages, f"Expected {total_messages} messages, got {total_written}"
         assert len(written_ids) == total_messages, "All message IDs should be preserved"
         
-        print(f"✅ No data loss - all {total_messages} messages written successfully")
+        print(f"*  No data loss - all {total_messages} messages written successfully")
     
     def test_backpressure_metrics(self):
         """Test tracking of backpressure metrics."""
@@ -346,7 +346,7 @@ class TestBackpressureHandling:
         print(f"Max batch size reached: {metrics['max_batch_size']}")
         print(f"Average messages per flush: {metrics['total_messages'] / metrics['total_flushes']:.1f}")
         print(f"Configured batch size: {batch_size}")
-        print(f"✅ Backpressure handled efficiently")
+        print(f"*  Backpressure handled efficiently")
 
 
 def run_all_tests():
@@ -373,10 +373,10 @@ def run_all_tests():
             test_func()
             test_suite.teardown_method()
             passed += 1
-            print(f"\n✅ PASSED: {test_name}")
+            print(f"\n*  PASSED: {test_name}")
         except Exception as e:
             failed += 1
-            print(f"\n❌ FAILED: {test_name}")
+            print(f"\nXX FAILED: {test_name}")
             print(f"   Error: {e}")
             import traceback
             traceback.print_exc()

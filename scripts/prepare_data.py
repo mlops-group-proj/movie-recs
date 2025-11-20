@@ -64,7 +64,7 @@ def main():
     implicit.to_csv(outdir / "ratings_implicit.csv", index=False)
     df.to_csv(outdir / "ratings_explicit.csv", index=False)
 
-    print("[✅] Data prepared successfully!")
+    print("[* ] Data prepared successfully!")
     print(f"Saved to: {outdir}")
 
 

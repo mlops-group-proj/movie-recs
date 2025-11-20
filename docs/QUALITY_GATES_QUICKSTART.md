@@ -3,9 +3,9 @@
 ## Setup
 
 Your project now has automated quality gates that enforce:
-1. ✅ **Unit Tests** - All tests must pass
-2. ✅ **Schema Validation** - Kafka schemas must be valid
-3. ✅ **Backpressure Handling** - System handles load correctly
+1. *  **Unit Tests** - All tests must pass
+2. *  **Schema Validation** - Kafka schemas must be valid
+3. *  **Backpressure Handling** - System handles load correctly
 
 ## Running Quality Gates
 
@@ -88,7 +88,7 @@ chmod +x .git/hooks/pre-commit
 
 # Now gates run on every commit
 git commit -m "Your message"
-# 🔍 Running pre-commit quality gates...
+#   Running pre-commit quality gates...
 ```
 
 ## What Each Gate Checks
@@ -112,8 +112,8 @@ git commit -m "Your message"
 
 ## Exit Codes
 
-- `0` = All gates passed ✅
-- `1` = One or more gates failed ❌
+- `0` = All gates passed * 
+- `1` = One or more gates failed XX
 
 ## Full Documentation
 
@@ -152,10 +152,10 @@ python scripts/quality_gate.py --gate backpressure --verbose
 
 ## Next Steps
 
-1. ✅ Fix test environment (set USE_S3=false for tests)
-2. ✅ Run `python scripts/quality_gate.py` to verify all gates pass
-3. ✅ Install pre-commit hook (optional but recommended)
-4. ✅ Commit and push - CI will automatically run gates
+1. *  Fix test environment (set USE_S3=false for tests)
+2. *  Run `python scripts/quality_gate.py` to verify all gates pass
+3. *  Install pre-commit hook (optional but recommended)
+4. *  Commit and push - CI will automatically run gates
 
 ---
 

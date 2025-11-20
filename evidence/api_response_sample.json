@@ -1,0 +1,15 @@
+{
+  "user_id": 123,
+  "recommendations": [541, 318, 296, 593, 356, 260, 480, 527, 589, 595],
+  "k": 10,
+  "model_version": "v_ncf",
+  "request_id": "req_20251120_033045_abc123",
+  "timestamp": "2025-11-20T03:30:45.123456Z",
+  "provenance": {
+    "model_version": "v_ncf",
+    "model_path": "/models/v_ncf/model.pt",
+    "git_commit": "a1b2c3d",
+    "environment": "production",
+    "server_id": "api-server-01"
+  }
+}

@@ -4,7 +4,7 @@
 
 set -e
 
-echo "🔍 Running pre-commit quality gates..."
+echo "  Running pre-commit quality gates..."
 
 # Colors
 RED='\033[0;31m'

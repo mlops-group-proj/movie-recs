@@ -44,13 +44,13 @@ def run_command(cmd: list, description: str) -> tuple:
         )
         return True, result.stdout
     except subprocess.CalledProcessError as e:
-        print(f"    ❌ Failed: {e}")
+        print(f"    XX Failed: {e}")
         return False, e.stderr
 
 
 def collect_availability_report(output_dir: Path, prometheus_url: str):
     """Collect availability calculation reports."""
-    print("\n📊 Collecting Availability Reports...")
+    print("\n*  Collecting Availability Reports...")
 
     reports_dir = output_dir / "availability"
     reports_dir.mkdir(parents=True, exist_ok=True)
@@ -95,7 +95,7 @@ def collect_availability_report(output_dir: Path, prometheus_url: str):
             "Generate 144h text report"
         )
 
-    print("  ✅ Availability reports collected")
+    print("  *  Availability reports collected")
 
 
 def collect_model_update_verification(output_dir: Path, prometheus_url: str):
@@ -123,12 +123,12 @@ def collect_model_update_verification(output_dir: Path, prometheus_url: str):
             "Generate verification text report"
         )
 
-    print("  ✅ Model update verification collected")
+    print("  *  Model update verification collected")
 
 
 def collect_sample_api_responses(output_dir: Path, api_url: str):
     """Collect sample API responses showing provenance."""
-    print("\n🔍 Collecting Sample API Responses...")
+    print("\n  Collecting Sample API Responses...")
 
     samples_dir = output_dir / "api_samples"
     samples_dir.mkdir(parents=True, exist_ok=True)
@@ -154,10 +154,10 @@ def collect_sample_api_responses(output_dir: Path, api_url: str):
                 data = response.json()
                 (samples_dir / filename).write_text(json.dumps(data, indent=2))
 
-            print(f"    ✅ Saved to {filename}")
+            print(f"    *  Saved to {filename}")
 
         except Exception as e:
-            print(f"    ❌ Failed: {e}")
+            print(f"    XX Failed: {e}")
 
     # Get trace for the sample request
     try:
@@ -177,12 +177,12 @@ def collect_sample_api_responses(output_dir: Path, api_url: str):
             (samples_dir / "trace_sample.json").write_text(
                 json.dumps(trace_resp.json(), indent=2)
             )
-            print(f"  ✅ Collected trace for request_id={request_id}")
+            print(f"  *  Collected trace for request_id={request_id}")
 
     except Exception as e:
-        print(f"  ⚠️  Could not collect trace: {e}")
+        print(f"  !!  Could not collect trace: {e}")
 
-    print("  ✅ API samples collected")
+    print("  *  API samples collected")
 
 
 def collect_model_registry_info(output_dir: Path):
@@ -196,7 +196,7 @@ def collect_model_registry_info(output_dir: Path):
     model_registry_path = Path("model_registry")
 
     if not model_registry_path.exists():
-        print("  ⚠️  Model registry not found")
+        print("  !!  Model registry not found")
         return
 
     versions = []
@@ -217,7 +217,7 @@ def collect_model_registry_info(output_dir: Path):
         json.dumps({"versions": versions}, indent=2)
     )
 
-    print(f"  ✅ Found {len(versions)} model versions")
+    print(f"  *  Found {len(versions)} model versions")
 
 
 def collect_git_history(output_dir: Path):
@@ -259,7 +259,7 @@ def collect_git_history(output_dir: Path):
     if success:
         (git_dir / "branches.txt").write_text(output)
 
-    print("  ✅ Git history collected")
+    print("  *  Git history collected")
 
 
 def collect_system_info(output_dir: Path):
@@ -294,7 +294,7 @@ def collect_system_info(output_dir: Path):
             content = Path(req_file).read_text()
             (sys_dir / req_file).write_text(content)
 
-    print("  ✅ System info collected")
+    print("  *  System info collected")
 
 
 def collect_logs_sample(output_dir: Path):
@@ -322,7 +322,7 @@ def collect_logs_sample(output_dir: Path):
     if success:
         (logs_dir / "prometheus_logs_sample.txt").write_text(output)
 
-    print("  ✅ Log samples collected")
+    print("  *  Log samples collected")
 
 
 def create_evidence_summary(output_dir: Path):
@@ -350,7 +350,7 @@ def create_evidence_summary(output_dir: Path):
         json.dumps(summary, indent=2)
     )
 
-    print("  ✅ Evidence summary created")
+    print("  *  Evidence summary created")
 
 
 def main():
@@ -396,7 +396,7 @@ def main():
     create_evidence_summary(output_dir)
 
     print("\n" + "=" * 70)
-    print("✅ Evidence collection complete!")
+    print("*  Evidence collection complete!")
     print(f"📁 All evidence saved to: {output_dir.absolute()}")
     print("=" * 70)
 
