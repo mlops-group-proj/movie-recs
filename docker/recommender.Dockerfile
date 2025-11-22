@@ -33,9 +33,11 @@ RUN addgroup --system app && adduser --system --ingroup app app
 COPY --from=builder /opt/venv /opt/venv
 COPY service/ service/
 COPY recommender/ recommender/
+COPY data/ data/
 
-# Model registry is expected to be mounted (volume or env path)
-VOLUME ["/models"]
+# Copy model registry into the image for cloud deployment
+COPY model_registry/ /models/
+RUN chown -R app:app /models
 
 EXPOSE 8080
 USER app
