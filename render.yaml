@@ -1,0 +1,51 @@
+services:
+  # Movie Recommender API
+  - type: web
+    name: movie-recommender-api
+    env: docker
+    dockerfilePath: ./docker/recommender.Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    envVars:
+      - key: MODEL_REGISTRY
+        value: /models
+      - key: MODEL_NAME
+        value: ncf
+      - key: MODEL_VERSION
+        value: v_ncf
+      - key: ROLLOUT_STRATEGY
+        value: fixed
+      - key: ENVIRONMENT
+        value: production
+    healthCheckPath: /metrics
+    autoDeploy: true
+
+  # Prometheus
+  - type: web
+    name: movie-recommender-prometheus
+    env: docker
+    dockerfilePath: ./docker/prometheus.Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    healthCheckPath: /-/healthy
+    autoDeploy: true
+
+  # Grafana
+  - type: web
+    name: movie-recommender-grafana
+    env: docker
+    dockerfilePath: ./docker/grafana.Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    envVars:
+      - key: GF_SECURITY_ADMIN_USER
+        value: admin
+      - key: GF_SECURITY_ADMIN_PASSWORD
+        value: admin
+      - key: GF_SERVER_ROOT_URL
+        sync: false
+    healthCheckPath: /api/health
+    autoDeploy: true
