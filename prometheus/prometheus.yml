@@ -13,12 +13,26 @@ rule_files:
 #         - targets: ['alertmanager:9093']
 
 scrape_configs:
-  - job_name: "movie-recommender"
+  # Local Docker environment
+  - job_name: "movie-recommender-local"
     scrape_interval: 15s
     scrape_timeout: 10s
     metrics_path: /metrics
+    scheme: http
     static_configs:
       - targets: ["api:8080"]
+        labels:
+          environment: "local"
+          service: "movie-recommender"
+
+  # Deployed Render environment (scrape public API)
+  - job_name: "movie-recommender-production"
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: /metrics
+    scheme: https
+    static_configs:
+      - targets: ["movie-recommender-api-jobv.onrender.com"]
         labels:
           environment: "production"
           service: "movie-recommender"
