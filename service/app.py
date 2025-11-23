@@ -5,6 +5,7 @@ from prometheus_client import (
 )
 import os
 import logging
+import pandas as pd
 
 from recommender import drift
 from service.loader import ModelManager, ModelRegistryError
@@ -53,6 +54,24 @@ SLO_LATENCY_TARGET = Gauge("slo_latency_target_seconds", "SLO latency target in 
 SLO_AVAILABILITY_TARGET = Gauge("slo_availability_target_ratio", "SLO availability target (0-1)")
 SLO_ERROR_BUDGET = Gauge("slo_error_budget_remaining_ratio", "SLO error budget remaining (0-1)")
 
+# Feature Store metrics
+FEATURE_RETRIEVAL_LATENCY = Histogram(
+    "feature_retrieval_latency_seconds",
+    "Feature retrieval latency",
+    ["feature_type"],  # user, movie
+    buckets=(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5)
+)
+FEATURE_RETRIEVAL_TOTAL = Counter(
+    "feature_retrieval_total",
+    "Total feature retrievals",
+    ["feature_type", "status"]  # status: success, not_found, error
+)
+FEATURE_COVERAGE = Gauge(
+    "feature_coverage_ratio",
+    "Ratio of successful feature lookups",
+    ["feature_type"]
+)
+
 # Set SLO targets
 SLO_LATENCY_TARGET.set(0.1)  # 100ms p95 target
 SLO_AVAILABILITY_TARGET.set(0.999)  # 99.9% availability target
@@ -89,11 +108,65 @@ import time
 # Track service start time
 SERVICE_START_TIME = time.time()
 
+# Load movie titles for enriching recommendations
+MOVIE_TITLES = {}
+FEATURE_STATS = {"movie_lookups": 0, "movie_hits": 0, "movie_misses": 0}
+
+def load_movie_titles():
+    """Load movie titles from CSV into a dictionary."""
+    global MOVIE_TITLES
+    try:
+        titles_path = os.getenv("MOVIE_TITLES_PATH", "data/movie_titles.csv")
+        if os.path.exists(titles_path):
+            start = time.time()
+            df = pd.read_csv(titles_path)
+            MOVIE_TITLES = dict(zip(df['movie_id'], df['title']))
+            load_time = time.time() - start
+            logging.info(f"Loaded {len(MOVIE_TITLES)} movie titles in {load_time*1000:.2f}ms")
+        else:
+            logging.warning(f"Movie titles file not found at {titles_path}, titles will not be included")
+    except Exception as e:
+        logging.warning(f"Failed to load movie titles: {e}")
+
+def get_movie_title(movie_id: int) -> str:
+    """Get movie title by ID, fallback to 'Movie {id}' if not found.
+
+    Records metrics for feature store monitoring.
+    """
+    start = time.time()
+
+    # Track lookup
+    FEATURE_STATS["movie_lookups"] += 1
+
+    # Attempt retrieval
+    title = MOVIE_TITLES.get(movie_id)
+
+    # Record metrics
+    latency = time.time() - start
+    if title:
+        FEATURE_STATS["movie_hits"] += 1
+        FEATURE_RETRIEVAL_TOTAL.labels(feature_type="movie", status="success").inc()
+        FEATURE_RETRIEVAL_LATENCY.labels(feature_type="movie").observe(latency)
+    else:
+        FEATURE_STATS["movie_misses"] += 1
+        FEATURE_RETRIEVAL_TOTAL.labels(feature_type="movie", status="not_found").inc()
+        title = f"Movie {movie_id}"
+
+    # Update coverage gauge
+    if FEATURE_STATS["movie_lookups"] > 0:
+        coverage = FEATURE_STATS["movie_hits"] / FEATURE_STATS["movie_lookups"]
+        FEATURE_COVERAGE.labels(feature_type="movie").set(coverage)
+
+    return title
+
 @app.on_event("startup")
 def compute_drift_once():
     """Compute drift once at startup."""
     # Mark service as healthy
     HEALTH_STATUS.set(1)
+
+    # Load movie titles
+    load_movie_titles()
 
     logging.info("*  Running drift check on startup...")
     try:
@@ -223,10 +296,20 @@ def recommend(user_id: int, k: int = 20, model: str | None = None, request: Requ
             "method": "GET"
         })
 
+        # Enrich items with titles
+        items_with_titles = [
+            {
+                "movie_id": movie_id,
+                "title": get_movie_title(movie_id)
+            }
+            for movie_id in items
+        ]
+
         return {
             "user_id": user_id,
             "model": model_to_use,
-            "items": items,
+            "items": items,  # Keep original format for backwards compatibility
+            "recommendations": items_with_titles,  # Enhanced format with titles
             "variant": variant,  # Include variant for transparency
             # Provenance fields
             "provenance": provenance
