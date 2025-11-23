@@ -1,0 +1,18 @@
+{
+  "total_events": 1094,
+  "unique_users": 193,
+  "schema_errors": 0,
+  "mean_events_per_user": 5.668393782383419,
+  "std_events_per_user": 7.670945521386897,
+  "threshold": 28.68123034654411,
+  "flagged_users": [
+    {
+      "user_id": 8888,
+      "count": 50
+    },
+    {
+      "user_id": 9999,
+      "count": 100
+    }
+  ]
+}

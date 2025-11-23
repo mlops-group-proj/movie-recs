@@ -1,0 +1,11 @@
+{
+  "total_recommendations": 2000,
+  "unique_items": 1446,
+  "top_pop_share": 0.212,
+  "tail_share": 0.788,
+  "gini_exposure": 0.2129474412171508,
+  "segment_exposure_share": {
+    "odd": 0.5,
+    "even": 0.5
+  }
+}

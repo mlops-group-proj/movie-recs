@@ -12,3 +12,4 @@ python-dotenv
 matplotlib
 implicit
 torch==2.4.0
+httpx
