@@ -1,8 +1,6 @@
 """
-Feature definitions for Movie Recommender System.
-
-This module defines features for users and movies that will be used
-both for training and serving recommendations, ensuring consistency
+Feature definitions for Movie Recommender System. This module defines features for users and 
+movies that will be used both for training and serving recommendations, ensuring consistency 
 and preventing training-serving skew.
 """
 
@@ -32,13 +30,13 @@ movie = Entity(
 # Data Sources
 # =============================================================================
 
-# User features source (we'll create this)
+# User features source 
 user_features_source = FileSource(
     path="../../../data/user_features.parquet",
     timestamp_field="event_timestamp",
 )
 
-# Movie features source (we'll create this)
+# Movie features source
 movie_features_source = FileSource(
     path="../../../data/movie_features.parquet",
     timestamp_field="event_timestamp",
