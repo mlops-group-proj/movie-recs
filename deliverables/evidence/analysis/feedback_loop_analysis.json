@@ -1,0 +1,36 @@
+{
+  "tier_stats": {
+    "high": {
+      "count": 145,
+      "catalog_pct": 0.037342261138295134,
+      "exposure_pct": 0.213,
+      "amplification": 5.703993103448275
+    },
+    "medium": {
+      "count": 578,
+      "catalog_pct": 0.1488539788823075,
+      "exposure_pct": 0.4255,
+      "amplification": 2.8585060553633217
+    },
+    "low": {
+      "count": 579,
+      "catalog_pct": 0.149111511717744,
+      "exposure_pct": 0.2895,
+      "amplification": 1.9415
+    },
+    "tail": {
+      "count": 144,
+      "catalog_pct": 0.03708472830285862,
+      "exposure_pct": 0.072,
+      "amplification": 1.9414999999999998
+    },
+    "zero": {
+      "count": 2465,
+      "catalog_pct": 0.6348184393510172,
+      "exposure_pct": 0.0,
+      "amplification": 0.0
+    }
+  },
+  "zero_exposure_count": 2465,
+  "starvation_index": 0.6348184393510172
+}

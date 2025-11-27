@@ -1,0 +1,15 @@
+{
+  "total_recommendations": 2000,
+  "unique_items": 1446,
+  "catalog_size": 3883,
+  "catalog_coverage": 0.37239248004120523,
+  "gini_coefficient": 0.2129474412171508,
+  "top_10_pct_share": 0.212,
+  "top_20_pct_share": 0.357,
+  "tail_share": 0.788,
+  "segment_counts": {
+    "odd": 100,
+    "even": 100
+  },
+  "zero_exposure_items": 2437
+}
