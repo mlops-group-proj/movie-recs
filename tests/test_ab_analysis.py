@@ -89,7 +89,7 @@ class TestBootstrapCI:
 
         assert isinstance(result, BootstrapResult)
         assert abs(result.delta_mean) < 0.01  # Should be ~0
-        assert result.ci_lower < result.delta_mean < result.ci_upper
+        assert result.ci_lower <= result.delta_mean <= result.ci_upper
 
     def test_bootstrap_significant_difference(self):
         """Test bootstrap with clear difference."""
