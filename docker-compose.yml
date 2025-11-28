@@ -104,7 +104,7 @@ services:
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
-        envsubst < /etc/alertmanager/alertmanager.template.yml > /etc/alertmanager/alertmanager.yml
+        sed "s|\$${SLACK_WEBHOOK_URL}|$$SLACK_WEBHOOK_URL|g" /etc/alertmanager/alertmanager.template.yml > /etc/alertmanager/alertmanager.yml
         exec /bin/alertmanager --config.file=/etc/alertmanager/alertmanager.yml --storage.path=/alertmanager
     restart: always
 
