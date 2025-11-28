@@ -6,7 +6,7 @@ services:
   # API (Recommender Service)
   # --------------------------
   api:
-    image: 211366704300.dkr.ecr.us-east-1.amazonaws.com/movie-recommender:latest
+    image: 211366704300.dkr.ecr.us-east-1.amazonaws.com/movie-recommender-api:latest
     container_name: movie-recommender
     restart: always
     ports:
