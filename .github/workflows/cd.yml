@@ -32,8 +32,8 @@ jobs:
       
       - name: Build and Push Recommender API
         run: |
-          docker build -f docker/recommender.Dockerfile -t $ECR_REGISTRY/movie-recommender:latest .
-          docker push $ECR_REGISTRY/movie-recommender:latest
+          docker build -f docker/recommender.Dockerfile -t $ECR_REGISTRY/movie-recommender-api:latest .
+          docker push $ECR_REGISTRY/movie-recommender-api:latest
 
       - name: Build and Push Ingestor
         run: |
