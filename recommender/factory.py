@@ -51,10 +51,12 @@ class ALSRecommender:
         u_idx = self.user_map[str(user_id)]
         user_vec = self.user_factors[u_idx]
         scores = user_vec @ self.item_factors.T
-        # Only filter seen items if u_idx is within bounds of seen_csr
+        n_items = len(scores)
+        # Filter out seen items (only those within valid score range)
         if u_idx < self.seen_csr.shape[0]:
             seen_items = self.seen_csr[u_idx].indices
-            scores[seen_items] = -np.inf
+            valid_seen = seen_items[seen_items < n_items]
+            scores[valid_seen] = -np.inf
         topk = np.argpartition(scores, -k)[-k:]
         topk = topk[np.argsort(scores[topk])[::-1]]
         return [int(self.rev_item_map[i]) for i in topk]

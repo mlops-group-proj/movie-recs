@@ -160,7 +160,7 @@ class TestProvenanceIntegration:
         import os
         os.environ["CONTAINER_IMAGE_DIGEST"] = "sha256:abcdef123456"
 
-        response = client.get("/recommend/999?k=3")
+        response = client.get("/recommend/100?k=3")
         assert response.status_code == 200
 
         data = response.json()
