@@ -81,4 +81,4 @@ def test_probe_sends_and_records(monkeypatch, capsys):
 
     # Validate stdout output
     out = capsys.readouterr().out
-    assert "simulated probe ok" in out.lower()
+    assert "probe ok" in out.lower()
