@@ -1,4 +1,4 @@
-name: CI & CD Pipeline
+name: CI (Test & Validate)
 
 on:
   push:
@@ -7,134 +7,79 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
-  build-test-deploy:
+  test-and-validate:
     runs-on: ubuntu-latest
-
     steps:
-    # ------------------------------------------------------------------
-    # Checkout & Python setup
-    # ------------------------------------------------------------------
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      # ------------------------------------------------------------------
+      # Checkout & Python setup
+      # ------------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-        cache: 'pip'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-    # ------------------------------------------------------------------
-    # Quality gates & Unit tests with coverage
-    # ------------------------------------------------------------------
-    - name: Set PYTHONPATH
-      run: echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
+      # ------------------------------------------------------------------
+      # Quality gates & Unit tests
+      # ------------------------------------------------------------------
+      - name: Set PYTHONPATH
+        run: echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
 
-    - name: Run unit tests + coverage
-      env:
-        KAFKA_BOOTSTRAP: localhost:9092
-        KAFKA_API_KEY: fake_key
-        KAFKA_API_SECRET: fake_secret
-        KAFKA_TEAM: myteam
-        AWS_ACCESS_KEY_ID: fake_access_key
-        AWS_SECRET_ACCESS_KEY: fake_secret_key
-        AWS_REGION: us-east-2
-      run: |
-        mkdir -p reports
-        pytest --maxfail=1 --disable-warnings \
-          --cov=. \
-          --cov-report=term-missing \
-          --cov-report=xml:reports/coverage.xml
+      - name: Run unit tests + coverage
+        # Using fake credentials for testing only
+        env:
+          KAFKA_BOOTSTRAP: localhost:9092
+          KAFKA_API_KEY: fake_key
+          KAFKA_API_SECRET: fake_secret
+          KAFKA_TEAM: myteam
+          AWS_ACCESS_KEY_ID: fake_access_key
+          AWS_SECRET_ACCESS_KEY: fake_secret_key
+          AWS_REGION: us-east-2
+        run: |
+          mkdir -p reports
+          pytest --maxfail=1 --disable-warnings \
+            --cov=. \
+            --cov-report=term-missing \
+            --cov-report=xml:reports/coverage.xml
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: reports/coverage.xml
-        flags: unittests
-        fail_ci_if_error: true
-        verbose: true
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: reports/coverage.xml
+          flags: unittests
+          fail_ci_if_error: false # Don't block pipeline if codecov fails
+          verbose: true
 
-    # ------------------------------------------------------------------
-    # Smoke tests (Offline eval + drift detection)
-    # ------------------------------------------------------------------
-    - name: Verify data files
-      run: |
-        echo "Verifying dataset contents:"
-        ls -lh data/ml1m_prepared || echo "!! Dataset missing!"
+      # ------------------------------------------------------------------
+      # Smoke tests (Offline eval + drift detection)
+      # ------------------------------------------------------------------
+      - name: Verify data files
+        run: |
+          echo "Verifying dataset contents:"
+          ls -lh data/ml1m_prepared || echo "!! Dataset missing!"
 
-    - name: Run offline evaluation (ItemCF)
-      run: python experiments/ml1m_baselines/train_itemcf.py
+      - name: Run offline evaluation (ItemCF)
+        run: python experiments/ml1m_baselines/train_itemcf.py
 
-    # Drift quality gate: fails if PSI exceeds threshold
-    - name: Run drift detection
-      id: drift
-      continue-on-error: false
-      run: |
-        echo "Checking for data drift..."
-        python -m recommender.drift --threshold 0.25
+      # Drift quality gate: fails if PSI exceeds threshold
+      - name: Run drift detection
+        id: drift
+        continue-on-error: false
+        run: |
+          echo "Checking for data drift..."
+          python -m recommender.drift --threshold 0.25
 
-    # ------------------------------------------------------------------
-    # Deploy to AWS ECS via ECR
-    # ------------------------------------------------------------------
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
-
-    - name: Log in to Amazon ECR
-      id: ecr-login
-      uses: aws-actions/amazon-ecr-login@v2
-      with:
-        registry-type: private
-        mask-password: true
-
-    - name: Build, tag, and push Docker image
-      id: build-image
-      env:
-        ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
-        ECR_REPOSITORY: movie-recs
-        IMAGE_TAG: v${{ github.run_number }}
-      run: |
-        echo "🛠️ Building image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-        docker build -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" -f docker/recommender.Dockerfile .
-        echo "📦 Pushing image to ECR..."
-        docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-
-    - name: Deploy ECS service
-      if: github.ref == 'refs/heads/main'
-      env:
-        CLUSTER: ${{ secrets.ECS_CLUSTER }}
-        SERVICE: ${{ secrets.ECS_SERVICE }}
-        IMAGE_URI: ${{ steps.build-image.outputs.image }}
-        AWS_REGION: ${{ secrets.AWS_REGION }}
-      run: |
-        echo "🚀 Deploying ECS service..."
-        aws ecs update-service \
-          --cluster "$CLUSTER" \
-          --service "$SERVICE" \
-          --force-new-deployment \
-          --desired-count 1 \
-          --region "$AWS_REGION"
-        echo "*  ECS service update triggered successfully."
-
-    # ------------------------------------------------------------------
-    # Report summary
-    # ------------------------------------------------------------------
-    - name: Summarize results
-      run: |
-        echo "### CI/CD Summary" >> $GITHUB_STEP_SUMMARY
-        echo "- *  Unit tests & coverage complete" >> $GITHUB_STEP_SUMMARY
-        echo "- *  Offline evaluation completed" >> $GITHUB_STEP_SUMMARY
-        echo "- *  Drift check passed (PSI < 0.25)" >> $GITHUB_STEP_SUMMARY
-        echo "- 🚀 Image deployed: ${{ steps.build-image.outputs.image }}" >> $GITHUB_STEP_SUMMARY
+      - name: CI Summary
+        run: |
+          echo "✅ CI Tests Passed" >> $GITHUB_STEP_SUMMARY

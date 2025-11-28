@@ -17,5 +17,5 @@ tabulate
 pytest-cov
 requests
 matplotlib
-boto3
 psutil
+boto3

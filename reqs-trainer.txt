@@ -6,7 +6,6 @@ implicit
 torch==2.4.0
 matplotlib
 pyarrow
-boto3
 tabulate
 psutil
 python-dotenv

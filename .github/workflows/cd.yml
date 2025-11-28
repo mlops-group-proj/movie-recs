@@ -1,52 +1,87 @@
-name: CD
+name: CD (Deploy to EC2)
+
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types: ["completed"]
+  push:
+    branches: [ "main" ]
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: 211366704300.dkr.ecr.us-east-1.amazonaws.com
 
 jobs:
-  deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+  build-and-deploy:
     runs-on: ubuntu-latest
-
-    env:
-      AWS_REGION: us-east-2
-      ECS_CLUSTER: movie-recs-cluster-v2
-      ECS_SERVICE: movie-recs-task-service-4xo827x0
-      ECR_REPOSITORY: movie-recs
-      DOCKERFILE_PATH: docker/recommender.Dockerfile  # << Change if deploying a different service
-
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v3
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Log in to Amazon ECR
+      - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+        uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build, tag, and push Docker image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          DOCKERFILE_PATH: docker/recommender.Dockerfile
+      # ------------------------------------------------------------------
+      # Build & Push 3 Images (API, Ingestor, Trainer)
+      # ------------------------------------------------------------------
+      
+      - name: Build and Push Recommender API
         run: |
-          IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
-                      -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
-                      -f $DOCKERFILE_PATH .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker build -f docker/recommender.Dockerfile -t $ECR_REGISTRY/movie-recommender:latest .
+          docker push $ECR_REGISTRY/movie-recommender:latest
 
-
-      - name: Force new ECS deployment
+      - name: Build and Push Ingestor
         run: |
-          aws ecs update-service \
-            --cluster $ECS_CLUSTER \
-            --service $ECS_SERVICE \
-            --force-new-deployment
+          docker build -f docker/ingestor.Dockerfile -t $ECR_REGISTRY/movie-ingestor:latest .
+          docker push $ECR_REGISTRY/movie-ingestor:latest
+
+      - name: Build and Push Trainer
+        run: |
+          docker build -f docker/trainer.Dockerfile -t $ECR_REGISTRY/movie-trainer:latest .
+          docker push $ECR_REGISTRY/movie-trainer:latest
+
+      # ------------------------------------------------------------------
+      # Deploy to EC2
+      # ------------------------------------------------------------------
+
+      # 1. Copy the docker-compose file and Prometheus/Grafana configs to the server
+      - name: Copy Configs to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          # Ensure you are copying the PROD yaml, not the local dev one
+          source: "docker-compose.prod.yml,prometheus/,grafana/"
+          target: "/home/ec2-user/"
+
+      # 2. SSH in, update secrets, and restart containers
+      - name: SSH and Restart
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Login to ECR
+            aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+            
+            # Rename prod compose to standard name
+            mv /home/ec2-user/docker-compose.prod.yml /home/ec2-user/docker-compose.yml
+            
+            # Create .env file with secrets from GitHub Actions
+            echo "KAFKA_BOOTSTRAP=${{ secrets.KAFKA_BOOTSTRAP }}" > .env
+            echo "KAFKA_API_KEY=${{ secrets.KAFKA_API_KEY }}" >> .env
+            echo "KAFKA_API_SECRET=${{ secrets.KAFKA_API_SECRET }}" >> .env
+            
+            # Pull new images and restart
+            docker compose pull
+            docker compose up -d --remove-orphans
+            
+            # Cleanup old images
+            docker image prune -f

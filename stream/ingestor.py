@@ -1,6 +1,6 @@
 """
 Stream ingestor that consumes Kafka messages, validates schemas, and writes to parquet.
-Supports both local filesystem and S3 storage.
+Supports both local filesystem and S3-compatible storage (MinIO).
 """
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from confluent_kafka import Consumer, KafkaException
 from pydantic import BaseModel, Field
 import threading
 
-# S3 imports (optional - only used if USE_S3=true)
+# S3-compatible storage imports (MinIO uses the same API as S3)
 try:
     import boto3
     from botocore.exceptions import ClientError
@@ -28,7 +28,7 @@ class WatchEvent(BaseModel):
     user_id: int
     movie_id: int
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    
+
 class RateEvent(BaseModel):
     user_id: int
     movie_id: int
@@ -69,27 +69,30 @@ class StreamIngestor:
         self.s3_prefix = s3_prefix or os.environ.get("S3_PREFIX", "snapshots")
         self._running = False   # track lifecycle state
 
-        
-        # Initialize S3 client if needed
+        # Initialize S3-compatible client (MinIO) if needed
         if self.use_s3:
             if not S3_AVAILABLE:
-                raise ImportError("boto3 is required for S3 storage. Install with: pip install boto3")
+                raise ImportError("boto3 is required for S3/MinIO storage. Install with: pip install boto3")
             if not self.s3_bucket:
                 raise ValueError("S3_BUCKET must be set when USE_S3=true")
-            
+
+            # MinIO endpoint - defaults to localhost:9000 for local development
+            endpoint_url = os.environ.get("S3_ENDPOINT_URL", "http://localhost:9000")
+
             self.s3_client = boto3.client(
                 's3',
-                region_name=os.environ.get("AWS_REGION", "us-east-1"),
-                aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID"),
-                aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY"),
+                endpoint_url=endpoint_url,
+                aws_access_key_id=os.environ.get("MINIO_ACCESS_KEY", os.environ.get("AWS_ACCESS_KEY_ID", "minioadmin")),
+                aws_secret_access_key=os.environ.get("MINIO_SECRET_KEY", os.environ.get("AWS_SECRET_ACCESS_KEY", "minioadmin")),
+                region_name=os.environ.get("S3_REGION", "us-east-1"),
             )
-            print(f"S3 storage enabled: s3://{self.s3_bucket}/{self.s3_prefix}")
+            print(f"S3-compatible storage enabled: {endpoint_url}/{self.s3_bucket}/{self.s3_prefix}")
         else:
             self.s3_client = None
             self.storage_path = Path(storage_path)
             self.storage_path.mkdir(parents=True, exist_ok=True)
             print(f"Local storage enabled: {self.storage_path}")
-        
+
         self.batch_size = batch_size
         self.flush_interval_sec = flush_interval_sec
         self.batches: Dict[str, List[Dict[str, Any]]] = {
@@ -111,7 +114,7 @@ class StreamIngestor:
             "group.id": "ingestor",
             "auto.offset.reset": "earliest",
         }
-        
+
         # Subscribe to all topics
         consumer = Consumer(conf)
         topics = [f"{os.environ['KAFKA_TEAM']}.{topic}" for topic in TOPIC_SCHEMAS.keys()]
@@ -138,20 +141,20 @@ class StreamIngestor:
             return None
 
     def _write_batch_to_parquet(self, topic_type: str, batch: List[Dict[str, Any]]) -> None:
-        """Write a batch of messages to a parquet file (local or S3)."""
+        """Write a batch of messages to a parquet file (local or S3/MinIO)."""
         if not batch:
             return
 
         # Convert to DataFrame
         df = pd.DataFrame(batch)
-        
+
         # Create timestamp-based partition path with year-month-day format
         now = datetime.now(UTC)
         date_str = now.strftime('%Y-%m-%d')
         filename = f"batch_{now.strftime('%Y%m%d_%H%M%S')}.parquet"
-        
+
         if self.use_s3:
-            # Write to S3
+            # Write to S3/MinIO
             s3_key = f"{self.s3_prefix}/{topic_type}/{date_str}/{filename}"
             try:
                 # Write to bytes buffer
@@ -159,8 +162,8 @@ class StreamIngestor:
                 buffer = io.BytesIO()
                 df.to_parquet(buffer, index=False)
                 buffer.seek(0)
-                
-                # Upload to S3
+
+                # Upload to S3/MinIO
                 self.s3_client.put_object(
                     Bucket=self.s3_bucket,
                     Key=s3_key,
@@ -168,7 +171,7 @@ class StreamIngestor:
                 )
                 print(f"Wrote {len(batch)} records to s3://{self.s3_bucket}/{s3_key}")
             except ClientError as e:
-                print(f"Error writing to S3: {e}")
+                print(f"Error writing to S3/MinIO: {e}")
                 raise
         else:
             # Write to local filesystem
@@ -184,18 +187,17 @@ class StreamIngestor:
         if not batch:
             return
 
-        if getattr(self, "use_s3", False):
-            # Future: handle S3
+        if self.use_s3:
             self._write_batch_to_parquet(topic_type, batch)
         else:
-            # Always create a Parquet file even for local runs
+            # Write to Parquet
             self._write_batch_to_parquet(topic_type, batch)
-            # Optional: also keep JSONL for inspection/debugging
+            # Also keep JSONL for inspection/debugging
             self._write_local(topic_type)
 
         self.batches[topic_type] = []
 
-    
+
     def _flush_batches(self) -> None:
         """Flush all topic batches to storage."""
         for topic_type in list(self.batches.keys()):
@@ -209,7 +211,7 @@ class StreamIngestor:
         try:
             while True:
                 msg = self.consumer.poll(timeout_sec)
-                
+
                 # Handle timeouts
                 if msg is None:
                     continue
@@ -247,7 +249,7 @@ class StreamIngestor:
             for topic_type in self.batches:
                 self._flush_batch(topic_type)
             self.consumer.close()
-    
+
     def _write_local(self, topic: str) -> None:
         """
         Write the current batch for a topic to local storage as JSONL.
@@ -276,7 +278,7 @@ class StreamIngestor:
         self.batches[topic] = []
 
         print(f"[Ingestor] Wrote local batch for '{topic}' → {file_path}")
-        
+
     def _consume_forever(self) -> None:
         """
         Placeholder for continuous Kafka consumption loop.
@@ -286,7 +288,7 @@ class StreamIngestor:
         while getattr(self, "_running", False):
             pass
 
-    
+
     def start(self):
         """
         Start the ingestion process in a background thread.
@@ -309,7 +311,7 @@ class StreamIngestor:
         if hasattr(self, "_thread") and self._thread.is_alive():
             self._thread.join(timeout=2)
 
-    
+
     def is_running(self) -> bool:
         """Return True if the ingestor has been started and not stopped."""
         return getattr(self, "_running", False)
