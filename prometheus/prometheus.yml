@@ -6,11 +6,11 @@ global:
 rule_files:
   - /etc/prometheus/alert_rules.yml
 
-# Alertmanager configuration (optional - for alert routing)
-# alerting:
-#   alertmanagers:
-#     - static_configs:
-#         - targets: ['alertmanager:9093']
+# Alertmanager configuration for alert routing
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
 
 scrape_configs:
   # Local Docker environment
@@ -25,14 +25,32 @@ scrape_configs:
           environment: "local"
           service: "movie-recommender"
 
-  # Deployed Render environment (scrape public API)
+  # Deployed AWS EC2 environment (scrape public API)
   - job_name: "movie-recommender-production"
     scrape_interval: 15s
     scrape_timeout: 10s
     metrics_path: /metrics
-    scheme: https
+    scheme: http
     static_configs:
-      - targets: ["movie-recommender-api-jobv.onrender.com"]
+      - targets: ["ec2-54-221-101-86.compute-1.amazonaws.com:8080"]
         labels:
           environment: "production"
           service: "movie-recommender"
+
+  # Confluent Cloud Metrics (Kafka cluster monitoring)
+  # Requires Cloud API Key from: Confluent Cloud → API Keys → Cloud resource management
+  # Get Cluster ID from: Confluent Cloud → Cluster Settings → Cluster ID
+  - job_name: "confluent-cloud"
+    scrape_interval: 60s
+    scrape_timeout: 55s
+    honor_timestamps: true
+    static_configs:
+      - targets: ["api.telemetry.confluent.cloud"]
+    scheme: https
+    basic_auth:
+      username: "${CONFLUENT_CLOUD_API_KEY}"
+      password: "${CONFLUENT_CLOUD_API_SECRET}"
+    metrics_path: /v2/metrics/cloud/export
+    params:
+      resource.kafka.id:
+        - "${CONFLUENT_KAFKA_CLUSTER}"

@@ -180,3 +180,39 @@ groups:
           summary: "High data drift detected"
           description: "PSI score is {{ $value }} for feature {{ $labels.feature }} (threshold: 0.2)"
           runbook_url: "https://github.com/mlops-group-proj/movie-recs/blob/main/docs/RUNBOOK.md#data-drift"
+
+      # ========================================
+      # Kafka / Confluent Cloud Alerts
+      # ========================================
+      - alert: KafkaConsumerLagHigh
+        expr: confluent_kafka_server_consumer_lag_offsets > 10000
+        for: 5m
+        labels:
+          severity: warning
+          component: kafka
+        annotations:
+          summary: "Kafka consumer lag is high"
+          description: "Consumer group {{ $labels.consumer_group_id }} has lag of {{ $value }} offsets on topic {{ $labels.topic }}"
+          runbook_url: "https://github.com/mlops-group-proj/movie-recs/blob/main/docs/RUNBOOK.md#kafka-lag"
+
+      - alert: KafkaConsumerLagCritical
+        expr: confluent_kafka_server_consumer_lag_offsets > 100000
+        for: 2m
+        labels:
+          severity: critical
+          component: kafka
+        annotations:
+          summary: "Kafka consumer lag is critical"
+          description: "Consumer group {{ $labels.consumer_group_id }} has lag of {{ $value }} offsets - ingestor may be down"
+          runbook_url: "https://github.com/mlops-group-proj/movie-recs/blob/main/docs/RUNBOOK.md#kafka-lag"
+
+      - alert: KafkaNoConsumption
+        expr: rate(confluent_kafka_server_sent_bytes[5m]) == 0
+        for: 10m
+        labels:
+          severity: warning
+          component: kafka
+        annotations:
+          summary: "No Kafka consumption detected"
+          description: "No bytes consumed from Kafka in the last 10 minutes - check ingestor"
+          runbook_url: "https://github.com/mlops-group-proj/movie-recs/blob/main/docs/RUNBOOK.md#kafka-no-consumption"

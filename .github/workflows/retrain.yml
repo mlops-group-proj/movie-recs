@@ -63,9 +63,26 @@ jobs:
           git commit -m "automated retrain: ${{ steps.version.outputs.version }}" || echo "No changes to commit"
           git push || echo "Push failed (may need branch protection bypass)"
 
+      - name: Hot-swap to new model on EC2
+        if: success()
+        env:
+          EC2_API_URL: ${{ secrets.EC2_API_URL }}
+        run: |
+          if [ -n "$EC2_API_URL" ]; then
+            echo "Triggering hot-swap to ${{ steps.version.outputs.version }}..."
+            curl -sf "${EC2_API_URL}/switch?model=${{ steps.version.outputs.version }}" \
+              --connect-timeout 10 \
+              --max-time 30 \
+              && echo "Hot-swap successful" \
+              || echo "Hot-swap failed (EC2 may be unreachable)"
+          else
+            echo "EC2_API_URL secret not set, skipping hot-swap"
+          fi
+
       - name: Summarize retrain run
         run: |
           echo "### Model Export" >> "$GITHUB_STEP_SUMMARY"
           echo "- Version: ${{ steps.version.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Artifacts: model-${{ steps.version.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Registry: Committed to repository" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Hot-swap: Triggered (if EC2_API_URL configured)" >> "$GITHUB_STEP_SUMMARY"
