@@ -193,7 +193,7 @@ class TestProvenanceIntegration:
 class TestAvroSchemaCompliance:
     """Tests for Avro schema compliance (structure validation)."""
 
-    def test_provenance_fields_match_avro_schema(self, client):
+    def test_provenance_fields_match_avro_schema(self):
         """Verify response structure matches updated Avro schema."""
         # Import here to avoid issues
         from service.app import app
