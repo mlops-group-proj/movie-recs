@@ -194,7 +194,7 @@ class TestMakeDecision:
         decision, rationale = make_decision(result)
 
         assert decision == ExperimentDecision.NO_DIFFERENCE
-        assert "not statistically significant" in rationale.lower()
+        assert "no statistically significant" in rationale.lower()
 
     def test_too_small_effect(self):
         """Test no difference when effect is too small to be practical."""
