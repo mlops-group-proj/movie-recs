@@ -98,7 +98,7 @@ def _get_or_create(name: str, desc: str) -> Gauge:
 PSI_G  = _get_or_create("data_drift_psi", "Population Stability Index")
 KL_G   = _get_or_create("data_drift_kl", "Kullback-Leibler Divergence")
 MISS_G = _get_or_create("data_missing_ratio", "Fraction of missing values")
-OUTL_G = _get_or_create("data_outlier_fraction", "Fraction of outliers (z>3)")
+OUTL_G = _get_or_create("data_outlier_fraction", "Fraction of outliers (z>2)")
 
 # Cache drift results
 app.state.drift_results = None
@@ -590,3 +590,118 @@ def analyze_experiment(time_window_minutes: int = 60):
             "percent_change": latency_pct_change
         }
     }
+
+
+@app.post("/experiment/promote")
+def promote_experiment(
+    time_window_minutes: int = 60,
+    dry_run: bool = True,
+    max_latency_regression_pct: float = 10.0
+):
+    """Auto-promote winning A/B variant based on statistical analysis.
+
+    Analyzes experiment results and automatically promotes the winning variant
+    if the decision is clear (SHIP_VARIANT_A or SHIP_VARIANT_B).
+
+    Args:
+        time_window_minutes: Time window for analysis
+        dry_run: If True, only show what would happen without making changes
+        max_latency_regression_pct: Maximum allowed latency regression before blocking promotion
+
+    Returns:
+        Promotion result with decision rationale
+    """
+    from service.rollout import RolloutStrategy
+    from service.ab_analysis import ExperimentDecision
+
+    # Get the analysis results
+    analysis = analyze_experiment(time_window_minutes)
+
+    # Check for insufficient data
+    if analysis.get("status") == "insufficient_data":
+        return {
+            "promoted": False,
+            "reason": "insufficient_data",
+            "message": analysis.get("message"),
+            "action": "none"
+        }
+
+    # Extract decision from analysis
+    stat_analysis = analysis.get("statistical_analysis", {})
+    decision = stat_analysis.get("decision")
+    rationale = stat_analysis.get("rationale", "")
+
+    # Get latency info
+    latency_comp = analysis.get("latency_comparison", {})
+    latency_regression = latency_comp.get("percent_change", 0)
+
+    # Determine promotion action
+    experiment = analysis.get("experiment", {})
+    variant_a = experiment.get("variant_A")
+    variant_b = experiment.get("variant_B")
+
+    result = {
+        "analysis_time_window_minutes": time_window_minutes,
+        "decision": decision,
+        "rationale": rationale,
+        "latency_regression_pct": latency_regression,
+        "dry_run": dry_run
+    }
+
+    # Check latency guardrail for variant B promotions
+    if decision == ExperimentDecision.SHIP_VARIANT_B.value:
+        if latency_regression > max_latency_regression_pct:
+            result["promoted"] = False
+            result["reason"] = "latency_guardrail"
+            result["message"] = (
+                f"Variant B is statistically better but has {latency_regression:.1f}% latency regression "
+                f"(max allowed: {max_latency_regression_pct}%). Promotion blocked."
+            )
+            result["action"] = "none"
+            return result
+
+        # Promote variant B
+        result["target_version"] = variant_b
+        result["action"] = "switch_to_variant_b"
+        if not dry_run:
+            # Perform the switch
+            switch_result = app.state.model_manager.switch(variant_b)
+            # Update rollout to fixed strategy with new version
+            app.state.rollout_config.strategy = RolloutStrategy.FIXED
+            app.state.rollout_config.primary_version = variant_b
+            result["promoted"] = True
+            result["message"] = f"Promoted to {variant_b}. Strategy set to fixed."
+            result["switch_result"] = {
+                "previous_version": switch_result.get("previous_version"),
+                "new_version": variant_b
+            }
+        else:
+            result["promoted"] = False
+            result["message"] = f"Would promote to {variant_b} (dry_run=True)"
+
+    elif decision == ExperimentDecision.SHIP_VARIANT_A.value:
+        # Keep variant A, end experiment
+        result["target_version"] = variant_a
+        result["action"] = "keep_variant_a"
+        if not dry_run:
+            # Switch back to fixed strategy with variant A
+            app.state.rollout_config.strategy = RolloutStrategy.FIXED
+            result["promoted"] = True
+            result["message"] = f"Kept {variant_a}. Strategy set to fixed."
+        else:
+            result["promoted"] = False
+            result["message"] = f"Would keep {variant_a} and end experiment (dry_run=True)"
+
+    elif decision == ExperimentDecision.NO_DIFFERENCE.value:
+        result["promoted"] = False
+        result["reason"] = "no_difference"
+        result["action"] = "none"
+        result["message"] = "No significant difference. Choose based on other criteria (cost, simplicity, etc.)"
+
+    else:  # INCONCLUSIVE
+        result["promoted"] = False
+        result["reason"] = "inconclusive"
+        result["action"] = "continue_experiment"
+        result["message"] = "Experiment inconclusive. Continue collecting data."
+
+    return result

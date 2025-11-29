@@ -116,7 +116,7 @@
       "targets": [
         { "expr": "data_outlier_fraction", "legendFormat": "{{feature}}", "refId": "D" }
       ],
-      "title": "Outlier Fraction (z > 3)",
+      "title": "Outlier Fraction (z > 2)",
       "type": "timeseries"
     }
   ],

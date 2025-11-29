@@ -102,7 +102,7 @@ def missing_value_ratio(series):
     """Fraction of missing values."""
     return float(series.isna().mean())
 
-def outlier_fraction(series, threshold=3.0):
+def outlier_fraction(series, threshold=2.0):
     """Fraction of samples whose z-score exceeds the threshold."""
     if not np.issubdtype(series.dtype, np.number):
         return 0.0
@@ -178,7 +178,7 @@ def run_drift(threshold=0.25, out_dir=OUT):
         "data_drift_psi": Gauge("data_drift_psi", "Population Stability Index", ["feature"], registry=registry),
         "data_drift_kl": Gauge("data_drift_kl", "Kullback-Leibler Divergence", ["feature"], registry=registry),
         "data_missing_ratio": Gauge("data_missing_ratio", "Fraction of missing values", ["feature"], registry=registry),
-        "data_outlier_fraction": Gauge("data_outlier_fraction", "Fraction of outliers (z>3)", ["feature"], registry=registry),
+        "data_outlier_fraction": Gauge("data_outlier_fraction", "Fraction of outliers (z>2)", ["feature"], registry=registry),
     }
 
     for feature, vals in metrics.items():
