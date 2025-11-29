@@ -69,8 +69,8 @@ class RolloutConfig:
         elif self.strategy == RolloutStrategy.AB_TEST:
             if not self.canary_version:
                 return self.primary_version
-            # Split based on user_id parity
-            return self.canary_version if (user_id % 2 == 0) else self.primary_version
+            # Split based on user_id parity: even=primary (A), odd=canary (B)
+            return self.primary_version if (user_id % 2 == 0) else self.canary_version
 
         elif self.strategy == RolloutStrategy.SHADOW:
             # Shadow mode: always return primary, log canary predictions separately
