@@ -2,7 +2,7 @@
 
 ## Base URL
 - **Local**: `http://localhost:8080`
-- **AWS ECS**: `http://movie-recs-alb-782825466.us-east-2.elb.amazonaws.com:8080`
+- **AWS EC2**: `http://ec2-54-221-101-86.compute-1.amazonaws.com:8080`
 
 ---
 

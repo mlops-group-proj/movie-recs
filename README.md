@@ -95,7 +95,7 @@ flowchart LR
    curl http://localhost:8080/recommend/42?k=10&model=ncf
    curl http://localhost:8080/metrics
    ```
-   Deployed to AWS ECS Fargate at: http://movie-recs-alb-782825466.us-east-2.elb.amazonaws.com:8080
+   Deployed to AWS EC2 at: <http://ec2-54-221-101-86.compute-1.amazonaws.com:8080>
    
 
 4. **Probe**
@@ -104,7 +104,7 @@ flowchart LR
    ```
 
 5. **View Dashboard**
-   - Grafana: [http://movie-recs-alb-782825466.us-east-2.elb.amazonaws.com:3000](http://movie-recs-alb-782825466.us-east-2.elb.amazonaws.com:3000)
+   - Grafana: <http://ec2-54-221-101-86.compute-1.amazonaws.com:3000>
    - Prometheus endpoint: `/metrics`
 
 ---

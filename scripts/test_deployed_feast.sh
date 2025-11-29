@@ -1,11 +1,12 @@
 #!/bin/bash
-# Test Feast metrics on deployed Render API
+# Test Feast metrics on deployed AWS EC2 API
 
-API_URL="https://movie-recommender-api-jobv.onrender.com"
-PROM_URL="https://movie-recommender-prometheus.onrender.com"
+API_URL="http://ec2-54-221-101-86.compute-1.amazonaws.com:8080"
+PROM_URL="http://ec2-54-221-101-86.compute-1.amazonaws.com:9090"
+GRAFANA_URL="http://ec2-54-221-101-86.compute-1.amazonaws.com:3000"
 
 echo "========================================================================="
-echo "Testing Feast Feature Store on Deployed Render API"
+echo "Testing Feast Feature Store on Deployed AWS EC2 API"
 echo "========================================================================="
 
 echo -e "\n1. Checking API health..."
@@ -66,12 +67,12 @@ echo "Deployment Check Complete!"
 echo "========================================================================="
 echo ""
 echo "Next steps:"
-echo "1. Open Grafana: https://movie-recommender-grafana.onrender.com"
+echo "1. Open Grafana: $GRAFANA_URL"
 echo "2. Go to Dashboards → Import"
 echo "3. Upload: grafana/dashboards/feast_feature_store.json"
 echo "4. View the populated Feast metrics dashboard"
 echo ""
 echo "If metrics show '(Not available yet)', wait a few minutes for:"
-echo "- Render deployment to complete"
+echo "- EC2 deployment to complete"
 echo "- Prometheus to scrape the new metrics"
 echo "- Then run this script again"
