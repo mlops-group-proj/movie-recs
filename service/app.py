@@ -260,6 +260,12 @@ def recommend(user_id: int, k: int = 20, model: str | None = None, request: Requ
         # Build provenance fields
         # Note: version metadata is nested under version_meta["version"]
         version_info = version_meta.get("version", {})
+
+        # Get container image digest, converting empty string to None
+        image_digest = version_meta.get("image_digest") or os.environ.get("CONTAINER_IMAGE_DIGEST")
+        if not image_digest:
+            image_digest = None
+
         provenance = {
             "request_id": request_id,
             "timestamp": int(start_time * 1000),  # milliseconds since epoch
@@ -267,8 +273,8 @@ def recommend(user_id: int, k: int = 20, model: str | None = None, request: Requ
             "model_version": model_to_use,
             "git_sha": version_info.get("git_sha", "unknown"),
             "data_snapshot_id": version_info.get("data_snapshot_id", "unknown"),
-            "container_image_digest": version_meta.get("image_digest", None),
-            "latency_ms": int(latency * 1000)
+            "container_image_digest": image_digest,
+            "latency_ms": max(1, round(latency * 1000))  # At least 1ms, rounded
         }
 
         # Structured logging with provenance context
@@ -343,7 +349,7 @@ def recommend(user_id: int, k: int = 20, model: str | None = None, request: Requ
                 "git_sha": version_meta.get("git_sha", "unknown"),
                 "data_snapshot_id": version_meta.get("data_snapshot_id", "unknown"),
                 "status": 500,
-                "latency_ms": int(latency * 1000),
+                "latency_ms": max(1, round(latency * 1000)),
                 "error_type": type(e).__name__,
                 "variant": variant
             }
