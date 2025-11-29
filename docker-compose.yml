@@ -21,6 +21,7 @@ services:
       CANARY_VERSION: ${CANARY_VERSION:-}
       CANARY_PERCENTAGE: ${CANARY_PERCENTAGE:-0}
       ENVIRONMENT: ${ENVIRONMENT:-production}
+      CONTAINER_IMAGE_DIGEST: ${CONTAINER_IMAGE_DIGEST:-}
     volumes:
       - ./service:/app/service:ro
       - ./recommender:/app/recommender:ro
