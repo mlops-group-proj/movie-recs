@@ -43,7 +43,7 @@ scrape_configs:
   - job_name: "confluent-cloud"
     scrape_interval: 60s
     scrape_timeout: 55s
-    honor_timestamps: true
+    honor_timestamps: false
     static_configs:
       - targets: ["api.telemetry.confluent.cloud"]
     scheme: https
