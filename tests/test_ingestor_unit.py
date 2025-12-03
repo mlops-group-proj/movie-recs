@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 from stream.ingestor import StreamIngestor
 
+
 def test_flush_batches_triggers_write(tmp_path):
     mock_consumer = MagicMock()
     ing = StreamIngestor(
@@ -11,21 +12,24 @@ def test_flush_batches_triggers_write(tmp_path):
         use_s3=False,
     )
     ing.consumer = mock_consumer
-    ing.batches["watch"].append({"id": 1})
-    ing.batches["watch"].append({"id": 2})
-    with patch.object(ing, "_write_local", return_value=None) as w:
-        ing._flush_batches()
+    ing.batches["watch"].append({"user_id": 1, "movie_id": 10, "timestamp": "2025-01-01T00:00:00Z"})
+    ing.batches["watch"].append({"user_id": 2, "movie_id": 20, "timestamp": "2025-01-01T00:00:00Z"})
+    with patch.object(ing, "_write_batch_to_parquet", return_value=None) as w:
+        ing._flush_all_batches()
         w.assert_called_once()
+
 
 def test_start_and_stop(monkeypatch, tmp_path):
     ing = StreamIngestor(storage_path=tmp_path, use_s3=False)
-    monkeypatch.setattr(ing, "_consume_forever", lambda: None)
+    # Mock run to return immediately
+    monkeypatch.setattr(ing, "run", lambda: None)
     ing.start()
     ing.stop()
     assert not ing._thread.is_alive()
 
+
 def test_empty_flush_does_not_write(tmp_path):
     ing = StreamIngestor(storage_path=tmp_path, use_s3=False)
-    with patch.object(ing, "_write_local", return_value=None) as w:
-        ing._flush_batches()
+    with patch.object(ing, "_write_batch_to_parquet", return_value=None) as w:
+        ing._flush_all_batches()
         w.assert_not_called()
