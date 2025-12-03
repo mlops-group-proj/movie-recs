@@ -66,6 +66,29 @@ except ImportError:
 # Topics to consume (watch and rate only for training data)
 TOPICS_TO_CONSUME = ["watch", "rate"]
 
+# Schema definitions for each topic type
+TOPIC_SCHEMAS = {
+    "watch": {
+        "type": "record",
+        "name": "WatchEvent",
+        "fields": [
+            {"name": "user_id", "type": "int"},
+            {"name": "movie_id", "type": "int"},
+            {"name": "ts", "type": "long"}
+        ]
+    },
+    "rate": {
+        "type": "record",
+        "name": "RateEvent",
+        "fields": [
+            {"name": "user_id", "type": "int"},
+            {"name": "movie_id", "type": "int"},
+            {"name": "rating", "type": "float"},
+            {"name": "ts", "type": "long"}
+        ]
+    }
+}
+
 
 class StreamIngestor:
     def __init__(
