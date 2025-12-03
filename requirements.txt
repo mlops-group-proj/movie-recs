@@ -5,7 +5,9 @@ pydantic
 pandas
 pyarrow
 confluent-kafka
+confluent-kafka[schema-registry]
 attrs
+cachetools
 authlib
 python-dotenv
 scikit-learn
