@@ -16,6 +16,39 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
+from pydantic import BaseModel, Field
+
+
+# -------------------------------------------------------------------------
+# Pydantic models for Kafka events
+# -------------------------------------------------------------------------
+class WatchEvent(BaseModel):
+    """A user watched a movie."""
+    user_id: int
+    movie_id: int
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class RateEvent(BaseModel):
+    """A user rated a movie."""
+    user_id: int
+    movie_id: int
+    rating: float
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class RecoRequest(BaseModel):
+    """A recommendation request."""
+    user_id: int
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class RecoResponse(BaseModel):
+    """A recommendation response."""
+    user_id: int
+    movie_ids: List[int]
+    scores: List[float]
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 from confluent_kafka import Consumer, KafkaException
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.avro import AvroDeserializer
