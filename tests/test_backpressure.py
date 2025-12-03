@@ -8,6 +8,7 @@ Tests:
 4. No data loss during backpressure
 """
 import sys
+import os
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
 from unittest.mock import Mock, patch, MagicMock
@@ -32,15 +33,24 @@ from stream.ingestor import StreamIngestor, WatchEvent
 
 class TestBackpressureHandling:
     """Test suite for backpressure mechanisms."""
-    
+
     def setup_method(self):
         """Create temporary directory for test snapshots."""
         self.test_dir = tempfile.mkdtemp()
-    
+        # Save and clear S3 env vars to ensure local storage is used
+        self._saved_env = {
+            'USE_S3': os.environ.pop('USE_S3', None),
+            'S3_BUCKET': os.environ.pop('S3_BUCKET', None),
+        }
+
     def teardown_method(self):
-        """Clean up temporary directory."""
+        """Clean up temporary directory and restore env vars."""
         if Path(self.test_dir).exists():
             shutil.rmtree(self.test_dir)
+        # Restore env vars
+        for key, value in self._saved_env.items():
+            if value is not None:
+                os.environ[key] = value
     
     def test_batch_size_triggers_flush(self):
         """Test that reaching batch_size triggers automatic flush."""
