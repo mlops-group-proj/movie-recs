@@ -152,10 +152,10 @@ class TestBackpressureHandling:
                 use_s3=False
             )
         
-        # Simulate high load across multiple topics
-        topics = ["watch", "rate", "reco_requests", "reco_responses"]
+        # Simulate high load across multiple topics (only use topics the ingestor supports)
+        topics = ["watch", "rate"]
         messages_per_topic = batch_size + 10  # Exceed batch size
-        
+
         for topic in topics:
             print(f"\nAdding {messages_per_topic} messages to {topic}")
             for i in range(messages_per_topic):
@@ -165,26 +165,14 @@ class TestBackpressureHandling:
                         "movie_id": i + 100,
                         "timestamp": datetime.now(timezone.utc).isoformat()
                     }
-                elif topic == "rate":
+                else:  # rate
                     msg = {
                         "user_id": i,
                         "movie_id": i + 100,
                         "rating": 4.5,
                         "timestamp": datetime.now(timezone.utc).isoformat()
                     }
-                elif topic == "reco_requests":
-                    msg = {
-                        "user_id": i,
-                        "timestamp": datetime.now(timezone.utc).isoformat()
-                    }
-                else:  # reco_responses
-                    msg = {
-                        "user_id": i,
-                        "movie_ids": [i + 100, i + 101, i + 102],
-                        "scores": [0.9, 0.8, 0.7],
-                        "timestamp": datetime.now(timezone.utc).isoformat()
-                    }
-                
+
                 ingestor.batches[topic].append(msg)
                 
                 # Check and flush if batch is full
