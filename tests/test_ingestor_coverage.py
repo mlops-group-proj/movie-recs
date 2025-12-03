@@ -6,7 +6,7 @@ from stream.ingestor import StreamIngestor, TOPIC_SCHEMAS
 def test_validate_message_error(monkeypatch):
     ing = StreamIngestor(use_s3=False)
     # force json error
-    bad = ing._validate_message("team.watch", "{bad json}")
+    bad = ing._validate_and_deserialize("team.watch", b"{bad json}")
     assert bad is None
 
 def test_s3_write_branch(monkeypatch, tmp_path):

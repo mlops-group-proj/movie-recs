@@ -34,9 +34,18 @@ load_dotenv()
 def snapshot_dir():
     """Create a temporary directory for snapshot testing."""
     temp_dir = tempfile.mkdtemp(prefix="snapshot_test_")
+    # Save and clear S3 env vars to ensure local storage is used
+    saved_env = {
+        'USE_S3': os.environ.pop('USE_S3', None),
+        'S3_BUCKET': os.environ.pop('S3_BUCKET', None),
+    }
     yield temp_dir
     # Cleanup after test
     shutil.rmtree(temp_dir, ignore_errors=True)
+    # Restore env vars
+    for key, value in saved_env.items():
+        if value is not None:
+            os.environ[key] = value
 
 
 @pytest.fixture
@@ -85,15 +94,11 @@ class TestSnapshotGeneration:
             # Verify snapshot directory structure
             watch_dir = Path(snapshot_dir) / "watch"
             assert watch_dir.exists(), "Watch directory should exist"
-            
-            # Verify date partition exists
-            date_dirs = list(watch_dir.iterdir())
-            assert len(date_dirs) == 1, "Should have one date partition"
-            
-            # Verify parquet file exists
-            parquet_files = list(date_dirs[0].glob("*.parquet"))
+
+            # Verify parquet file exists (structure is watch/YYYY-MM-DD/HH/batch_*.parquet)
+            parquet_files = list(watch_dir.rglob("*.parquet"))
             assert len(parquet_files) == 1, "Should have one parquet file"
-            
+
             # Verify parquet content
             df = pd.read_parquet(parquet_files[0])
             assert len(df) == 10, f"Expected 10 records, got {len(df)}"
@@ -149,11 +154,11 @@ class TestSnapshotGeneration:
                 print(f"   {pf.name}: {len(df)} records")
     
     def test_generate_all_topic_snapshots(self, snapshot_dir, mock_kafka_env):
-        """Test generating snapshots for all topic types."""
+        """Test generating snapshots for all supported topic types."""
         with patch('stream.ingestor.Consumer') as MockConsumer:
             ingestor = StreamIngestor(storage_path=snapshot_dir, batch_size=5)
-            
-            # Generate data for all topics
+
+            # Generate data for supported topics (watch and rate only)
             test_data = {
                 "watch": [
                     {"user_id": i, "movie_id": i * 10, "timestamp": datetime.now(UTC).isoformat()}
@@ -163,39 +168,26 @@ class TestSnapshotGeneration:
                     {"user_id": i, "movie_id": i * 20, "rating": 4.0, "timestamp": datetime.now(UTC).isoformat()}
                     for i in range(1, 6)
                 ],
-                "reco_requests": [
-                    {"user_id": i, "timestamp": datetime.now(UTC).isoformat()}
-                    for i in range(1, 6)
-                ],
-                "reco_responses": [
-                    {
-                        "user_id": i,
-                        "movie_ids": [i, i+1, i+2],
-                        "scores": [0.9, 0.8, 0.7],
-                        "timestamp": datetime.now(UTC).isoformat()
-                    }
-                    for i in range(1, 6)
-                ]
             }
-            
+
             # Add data and flush all topics
             for topic, messages in test_data.items():
                 for msg_data in messages:
                     ingestor.batches[topic].append(msg_data)
                 ingestor._flush_batch(topic)
-            
-            # Verify all topics have snapshots
-            for topic in ["watch", "rate", "reco_requests", "reco_responses"]:
+
+            # Verify supported topics have snapshots
+            for topic in ["watch", "rate"]:
                 topic_dir = Path(snapshot_dir) / topic
                 assert topic_dir.exists(), f"{topic} directory should exist"
-                
+
                 parquet_files = list(topic_dir.rglob("*.parquet"))
                 assert len(parquet_files) >= 1, f"{topic} should have at least one snapshot"
-                
+
                 # Verify data
                 df = pd.read_parquet(parquet_files[0])
                 assert len(df) == 5, f"{topic} should have 5 records"
-                
+
                 print(f"\n*  {topic}: {parquet_files[0]}")
                 print(f"   Records: {len(df)}")
     
