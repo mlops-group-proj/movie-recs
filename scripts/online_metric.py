@@ -83,15 +83,21 @@ def compute_success(df_reco, df_watch, window_min=10):
     ts_col_reco = "ts" if "ts" in df_reco.columns else "timestamp"
     ts_col_watch = "ts" if "ts" in df_watch.columns else "timestamp"
 
-    # Detect if timestamp is in ms or s based on magnitude (check each separately)
-    sample_ts_reco = df_reco[ts_col_reco].iloc[0]
-    unit_reco = "ms" if sample_ts_reco > 1e12 else "s"
+    # Parse timestamps - handle both numeric (epoch ms/s) and ISO string formats
+    def parse_timestamp_column(df, col):
+        sample = df[col].iloc[0]
+        if isinstance(sample, str):
+            # ISO format string
+            return pd.to_datetime(df[col])
+        elif sample > 1e12:
+            # Epoch milliseconds
+            return pd.to_datetime(df[col], unit="ms")
+        else:
+            # Epoch seconds
+            return pd.to_datetime(df[col], unit="s")
 
-    sample_ts_watch = df_watch[ts_col_watch].iloc[0]
-    unit_watch = "ms" if sample_ts_watch > 1e12 else "s"
-
-    df_reco["ts"] = pd.to_datetime(df_reco[ts_col_reco], unit=unit_reco)
-    df_watch["ts"] = pd.to_datetime(df_watch[ts_col_watch], unit=unit_watch)
+    df_reco["ts"] = parse_timestamp_column(df_reco, ts_col_reco)
+    df_watch["ts"] = parse_timestamp_column(df_watch, ts_col_watch)
 
     results = []
     for model, group in df_reco.groupby("model", dropna=False):
