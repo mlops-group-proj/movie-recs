@@ -73,6 +73,12 @@ def compute_success(df_reco, df_watch, window_min=10):
     if df_reco.empty or df_watch.empty:
         return None
 
+    # Debug: print actual column names
+    print(f"DEBUG: df_reco columns: {list(df_reco.columns)}")
+    print(f"DEBUG: df_watch columns: {list(df_watch.columns)}")
+    print(f"DEBUG: df_reco sample row: {df_reco.iloc[0].to_dict()}")
+    print(f"DEBUG: df_watch sample row: {df_watch.iloc[0].to_dict()}")
+
     # Handle different timestamp column names (ts or timestamp)
     ts_col_reco = "ts" if "ts" in df_reco.columns else "timestamp"
     ts_col_watch = "ts" if "ts" in df_watch.columns else "timestamp"
