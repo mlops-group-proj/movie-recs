@@ -77,12 +77,15 @@ def compute_success(df_reco, df_watch, window_min=10):
     ts_col_reco = "ts" if "ts" in df_reco.columns else "timestamp"
     ts_col_watch = "ts" if "ts" in df_watch.columns else "timestamp"
 
-    # Detect if timestamp is in ms or s based on magnitude
-    sample_ts = df_reco[ts_col_reco].iloc[0]
-    unit = "ms" if sample_ts > 1e12 else "s"
+    # Detect if timestamp is in ms or s based on magnitude (check each separately)
+    sample_ts_reco = df_reco[ts_col_reco].iloc[0]
+    unit_reco = "ms" if sample_ts_reco > 1e12 else "s"
 
-    df_reco["ts"] = pd.to_datetime(df_reco[ts_col_reco], unit=unit)
-    df_watch["ts"] = pd.to_datetime(df_watch[ts_col_watch], unit=unit)
+    sample_ts_watch = df_watch[ts_col_watch].iloc[0]
+    unit_watch = "ms" if sample_ts_watch > 1e12 else "s"
+
+    df_reco["ts"] = pd.to_datetime(df_reco[ts_col_reco], unit=unit_reco)
+    df_watch["ts"] = pd.to_datetime(df_watch[ts_col_watch], unit=unit_watch)
 
     results = []
     for model, group in df_reco.groupby("model", dropna=False):
