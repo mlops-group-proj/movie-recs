@@ -73,8 +73,8 @@ def compute_success(df_reco, df_watch, window_min=10):
     if df_reco.empty or df_watch.empty:
         return None
 
-    df_reco["ts"] = pd.to_datetime(df_reco["ts"], unit="s")
-    df_watch["ts"] = pd.to_datetime(df_watch["ts"], unit="s")
+    df_reco["ts"] = pd.to_datetime(df_reco["ts"], unit="ms")
+    df_watch["ts"] = pd.to_datetime(df_watch["ts"], unit="ms")
 
     results = []
     for model, group in df_reco.groupby("model", dropna=False):
