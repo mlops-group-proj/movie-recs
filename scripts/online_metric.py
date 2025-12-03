@@ -91,13 +91,15 @@ def compute_success(df_reco, df_watch, window_min=10):
             numeric_val = float(sample)
             if numeric_val > 1e12:
                 # Epoch milliseconds
-                return pd.to_datetime(df[col], unit="ms")
+                result = pd.to_datetime(df[col], unit="ms", utc=True)
             else:
                 # Epoch seconds
-                return pd.to_datetime(df[col], unit="s")
+                result = pd.to_datetime(df[col], unit="s", utc=True)
         except (ValueError, TypeError):
             # ISO format string or other non-numeric format
-            return pd.to_datetime(df[col])
+            result = pd.to_datetime(df[col], utc=True)
+        # Convert to timezone-naive for consistent comparisons
+        return result.dt.tz_localize(None)
 
     df_reco["ts"] = parse_timestamp_column(df_reco, ts_col_reco)
     df_watch["ts"] = parse_timestamp_column(df_watch, ts_col_watch)
