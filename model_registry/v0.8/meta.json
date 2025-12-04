@@ -1,0 +1,23 @@
+{
+  "version": "v0.8",
+  "created_at": "2025-12-04T05:43:29.388936+00:00",
+  "model_name": "als",
+  "artifact_path": "/home/runner/work/movie-recs/movie-recs/model_registry/v0.8/als",
+  "git_sha": "26866f61ac11de9e7b5bb885151ab9eeb89a9c61",
+  "data_snapshot_id": "9c1de44291dc0a7b0f0354cf256a383cd33ce9ea7adcf8debe3d9bc2786b3175",
+  "image_digest": "",
+  "exported_by": "z3301",
+  "artifact_sha": "21e51f682ee6830f906cea457592db9e23b112ab9dd897d5ec55c6dbc4294dff",
+  "artifact_size": 1359,
+  "metrics": {
+    "type": "ALS",
+    "factors": 64,
+    "iterations": 15,
+    "regularization": 0.01,
+    "users": 0,
+    "items": 0,
+    "k_eval": 10,
+    "hr": 0.0,
+    "ndcg": 0.0
+  }
+}
